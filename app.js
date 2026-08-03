@@ -1,6 +1,6 @@
 /**
  * CONSAR - Quizz Lucha Libre Financiera
- * Core Logic, Dual Sync Engine (Supabase Realtime Broadcast + BroadcastChannel + LocalStorage),
+ * Core Logic, Dual Sync Engine (Firebase Realtime Database Compat SDK + BroadcastChannel + LocalStorage),
  * Boxing Ring Bell Audio Player (Sonidocampanadebox.mp3), Confetti & State Management.
  */
 
@@ -15,9 +15,16 @@ const DEFAULT_STATE = {
   timestamp: Date.now()
 };
 
-// Credenciales oficiales de Supabase para Sincronización en Tiempo Real Multidispositivo
-const DEFAULT_SUPABASE_URL = "https://ynzxfxtfflniyjanxiqn.supabase.co";
-const DEFAULT_SUPABASE_KEY = "sb_secret_VFRCbDnPQjxM80PXkOvJZw_1mmIrjqA";
+// Credenciales Oficiales de Firebase Realtime Database
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDkKAiVlq_th7eXqb_5F6f25uFO4ZliYIk",
+  authDomain: "quizz-consar.firebaseapp.com",
+  databaseURL: "https://quizz-consar-default-rtdb.firebaseio.com",
+  projectId: "quizz-consar",
+  storageBucket: "quizz-consar.firebasestorage.app",
+  messagingSenderId: "676594424004",
+  appId: "1:676594424004:web:ce949462ddae2e80545191"
+};
 
 class TriviaApp {
   constructor() {
@@ -27,11 +34,9 @@ class TriviaApp {
     this.audioCtx = null;
     this.bellAudio = null;
 
-    // Supabase Realtime Client
-    this.supabaseClient = null;
-    this.realtimeChannel = null;
-    this.supabaseUrl = localStorage.getItem("consar_supabase_url") || DEFAULT_SUPABASE_URL;
-    this.supabaseKey = localStorage.getItem("consar_supabase_key") || DEFAULT_SUPABASE_KEY;
+    // Firebase Realtime Database Reference
+    this.firebaseDb = null;
+    this.dbRef = null;
 
     this.state = this.loadState();
     this.listeners = [];
@@ -67,43 +72,33 @@ class TriviaApp {
       }
     });
 
-    // 3. Supabase Realtime Multidispositivo (room-trivia / accion_trivia)
-    this.initSupabaseRealtime();
+    // 3. Firebase Realtime Database (Sincronización en Tiempo Real Multidispositivo Tablet <-> PC)
+    this.initFirebaseRealtime();
   }
 
-  initSupabaseRealtime() {
-    const rawUrl = this.supabaseUrl || DEFAULT_SUPABASE_URL;
-    const rawKey = this.supabaseKey || DEFAULT_SUPABASE_KEY;
-
-    // Normaliza la URL removiendo sufijos /rest/v1/
-    const cleanUrl = rawUrl.replace(/\/rest\/v1\/?$/, "").replace(/\/$/, "");
-
-    if (window.supabase && cleanUrl && rawKey) {
+  initFirebaseRealtime() {
+    if (window.firebase) {
       try {
-        this.supabaseClient = window.supabase.createClient(cleanUrl, rawKey);
-        // Canal global: room-trivia
-        this.realtimeChannel = this.supabaseClient.channel('room-trivia');
+        if (!window.firebase.apps.length) {
+          window.firebase.initializeApp(FIREBASE_CONFIG);
+        }
+        this.firebaseDb = window.firebase.database();
+        this.dbRef = this.firebaseDb.ref('triviaState');
 
-        // Escucha del evento: accion_trivia
-        this.realtimeChannel.on('broadcast', { event: 'accion_trivia' }, (payload) => {
-          if (payload && payload.payload && payload.payload.state) {
-            this.updateStateLocal(payload.payload.state, false, payload.payload.actionEvent);
+        // Escucha en vivo de cambios en la base de datos
+        this.dbRef.on('value', (snapshot) => {
+          const data = snapshot.val();
+          if (data && data.state) {
+            // Evita bucles infinitos aplicando cambios recibidos de forma local
+            this.updateStateLocal(data.state, false, data.actionEvent);
           }
-        }).subscribe((status) => {
-          console.log("🟢 Supabase Realtime Channel 'room-trivia' Status:", status);
         });
+
+        console.log("🔥 Firebase Realtime Database Conectado en nodo 'triviaState'");
       } catch (e) {
-        console.warn("Supabase Realtime Initialization Error:", e);
+        console.warn("Firebase Realtime Database Error:", e);
       }
     }
-  }
-
-  setSupabaseConfig(url, key) {
-    this.supabaseUrl = url ? url.trim() : DEFAULT_SUPABASE_URL;
-    this.supabaseKey = key ? key.trim() : DEFAULT_SUPABASE_KEY;
-    localStorage.setItem("consar_supabase_url", this.supabaseUrl);
-    localStorage.setItem("consar_supabase_key", this.supabaseKey);
-    this.initSupabaseRealtime();
   }
 
   loadState() {
@@ -139,16 +134,16 @@ class TriviaApp {
       }
     }
 
-    // Sync via Supabase Realtime Broadcast (Canal room-trivia / Evento accion_trivia)
-    if (this.realtimeChannel) {
+    // Sync via Firebase Realtime Database (Tablet <-> PC)
+    if (this.dbRef) {
       try {
-        this.realtimeChannel.send({
-          type: 'broadcast',
-          event: 'accion_trivia',
-          payload: syncData
+        this.dbRef.set({
+          state: this.state,
+          actionEvent: actionEvent,
+          timestamp: Date.now()
         });
       } catch (e) {
-        console.error("Supabase Realtime send error:", e);
+        console.error("Firebase Realtime Database write error:", e);
       }
     }
 
