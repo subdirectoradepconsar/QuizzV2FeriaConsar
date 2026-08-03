@@ -26,6 +26,9 @@
 </head>
 <body class="bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 min-h-screen text-white flex flex-col justify-between p-4 md:p-8 select-none overflow-hidden" id="screenBody">
 
+  <!-- Audio Element Preload for Boxing Bell -->
+  <audio id="boxingBellAudio" src="Sonidocampanadebox.mp3" preload="auto"></audio>
+
   <!-- TOP BAR: CONSAR Branding & Ring Scoreboard Counters -->
   <header class="w-full max-w-7xl mx-auto flex items-center justify-between gap-4 pb-4 border-b border-amber-500/30 relative z-10">
     
@@ -78,10 +81,10 @@
       <!-- Version & Question Indicator -->
       <div class="flex items-center justify-between mb-6 pb-4 border-b border-amber-500/20">
         <span class="text-sm font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2" id="versionTitle">
-          <span>🏆</span> Versión 1: ¡El Aplique del Ahorro!
+          <span>🏆</span> Round 1: Opción Múltiple
         </span>
         <span class="text-sm font-black px-4 py-1.5 bg-amber-500 text-slate-950 rounded-full font-mono shadow-md" id="questionBadge">
-          PREGUNTA 1 / 5
+          PREGUNTA 1 / 8
         </span>
       </div>
 
@@ -218,7 +221,8 @@
       }
 
       // STATE: Active Question
-      document.getElementById('versionTitle').innerHTML = `<span>🏆</span> ${currentVersion.name}`;
+      const teamSubTitle = currentQuestion.teamSet ? ` • ${currentQuestion.teamSet}` : '';
+      document.getElementById('versionTitle').innerHTML = `<span>🏆</span> ${currentVersion.name}${teamSubTitle}`;
       document.getElementById('questionBadge').innerText = `PREGUNTA ${state.questionIndex + 1} / ${currentVersion.questions.length}`;
       document.getElementById('questionText').innerText = currentQuestion.question;
 

@@ -1,180 +1,286 @@
 /**
  * CONSAR - Trivia Lucha Libre Financiera
- * Banco de Preguntas (3 versiones adaptadas a modalidades de juego)
- * - Versión 1: Opción Múltiple (4 opciones A, B, C, D)
- * - Versión 2: Verdadero o Falso (2 opciones)
- * - Versión 3: Respuesta Abierta (Sin opciones múltiples, respuesta de referencia)
+ * Banco de Preguntas Actualizado por Rounds & Modalidades:
+ * - Round 1: Opción Múltiple (8 preguntas)
+ * - Round 2: Relevo por equipos / Verdadero o Falso (10 preguntas: 5 Set Equipo 1 + 5 Set Equipo 2)
+ * - Round 3: Respuesta Abierta / Tercera Caída Definitoria (6 preguntas)
  */
 
 const TRIVIA_QUESTIONS = {
   version1: {
     id: "version1",
-    name: "Versión 1: ¡El Aplique del Ahorro! (Opción Múltiple)",
+    name: "Round 1: Opción Múltiple",
     mode: "multiple",
     questions: [
       {
         id: 1,
-        question: "¡El gancho al estómago del ahorro informal! ¿Por qué guardar dinero 'bajo el colchón' te hace perder la pelea?",
+        question: "¿Qué entidad regula y vigila a las Afores?",
         options: [
-          "A) Porque el colchón se puede romper o ensuciar",
-          "B) Por la inflación: el dinero pierde poder adquisitivo con el tiempo",
-          "C) Porque no te entregan un cinturón de campeón",
-          "D) Porque los bancos se molestan"
+          "a) CONDUSEF",
+          "b) CONSAR",
+          "c) SAT",
+          "d) IMSS"
         ],
         correct: 1,
-        explanation: "¡Contra la inflación, la Afore es tu mejor aliada! Mantener tu dinero invertido protege tu poder de compra a futuro."
+        explanation: "La CONSAR (Comisión Nacional del Sistema de Ahorro para el Retiro) regula y supervisa que tus recursos estén seguros."
       },
       {
         id: 2,
-        question: "¡La llave de rendición a las deudas! ¿Cuál es el primer paso para aplicar un candado de seguridad a tus finanzas?",
+        question: "Prestación que ofrece el patrón para fomentar el ahorro entre sus empleados:",
         options: [
-          "A) Gastar todo en el mercado y luego ver qué queda",
-          "B) Elaborar un presupuesto mensual y priorizar tus gastos necesarios",
-          "C) Pedir un préstamo a la Esquina Ruda",
-          "D) Cancelar todas tus tarjetas y no volver a comprar nada"
+          "a) Caja de ahorro",
+          "b) Renta vitalicia",
+          "c) Coyotaje",
+          "d) Tanda"
         ],
-        correct: 1,
-        explanation: "Un presupuesto claro es tu entrenamiento diario para dominar tus finanzas y vencer las deudas en el ring."
+        correct: 0,
+        explanation: "La caja de ahorro es una prestación laboral formal para fomentar el hábito del ahorro de los trabajadores."
       },
       {
         id: 3,
-        question: "¡El vuelo espectacular desde la tercera cuerda! ¿Qué es el Ahorro Voluntario en tu Afore?",
+        question: "¿Cuál de estos es un ejemplo de «gasto hormiga»?",
         options: [
-          "A) Una cuota obligatoria impuesta por el réferi del ring",
-          "B) Aportaciones adicionales que haces por tu cuenta para incrementar tu pensión",
-          "C) El dinero que le donas a la institución financiera",
-          "D) Un premio sorpresa que ganas al azar"
+          "a) Pagar la renta",
+          "b) Un café diario",
+          "c) Ahorrar para el retiro",
+          "d) Pagar el predial"
         ],
         correct: 1,
-        explanation: "El Ahorro Voluntario incrementa sustancialmente tu pensión futura gracias al impulso del interés compuesto."
+        explanation: "Un café diario, antojitos o compras impulsivas son gastos hormiga que merman tu capacidad de ahorro."
       },
       {
         id: 4,
-        question: "¡El tope suicida contra imprevistos! ¿Para qué sirve contar con un Fondo de Emergencia?",
+        question: "¿Para qué sirve la renta vitalicia?",
         options: [
-          "A) Para comprar boletos de Lucha Libre en primera fila",
-          "B) Para cubrir gastos inesperados sin endeudarte ni comprometer tu patrimonio",
-          "C) Para pagar la fiesta patronal de fin de año",
-          "D) Para apostar en la Esquina Ruda"
+          "a) Ahorrar a corto plazo",
+          "b) Garantizar una pensión de por vida",
+          "c) Cambiar de Afore",
+          "d) Evitar comisiones"
         ],
         correct: 1,
-        explanation: "Un fondo de emergencia de 3 a 6 meses de tu sueldo te protege ante cualquier 'patada voladora' de la vida diaria."
+        explanation: "La renta vitalicia es una modalidad de pensión contratada con una aseguradora para recibir pagos de por vida."
       },
       {
         id: 5,
-        question: "¡La máscara dorada del trabajador! ¿Qué institución regula y supervisa el Sistema de Ahorro para el Retiro en México?",
+        question: "¿Cuántas Afores operan actualmente en México?",
         options: [
-          "A) La Comisión Nacional de Lucha Libre",
-          "B) CONSAR (Comisión Nacional del Sistema de Ahorro para el Retiro)",
-          "C) La Asociación de Réferis y réferis auxiliares",
-          "D) El Banco Central del Barrio"
+          "a) 5",
+          "b) 10",
+          "c) 15",
+          "d) 20"
         ],
         correct: 1,
-        explanation: "La CONSAR vigila que los recursos de los trabajadores estén seguros, bien invertidos y transparentes en sus Afores."
+        explanation: "Actualmente operan 10 Afores autorizadas y supervisadas por la CONSAR en el sistema financiero."
+      },
+      {
+        id: 6,
+        question: "Una Afore es una institución…",
+        options: [
+          "a) Educativa",
+          "b) Financiera",
+          "c) De salud",
+          "d) De gobierno"
+        ],
+        correct: 1,
+        explanation: "Las Afores son instituciones financieras privadas dedicadas exclusivamente a administrar los fondos de retiro."
+      },
+      {
+        id: 7,
+        question: "¿Qué instituto atiende principalmente a los trabajadores del sector privado?",
+        options: [
+          "a) ISSSTE",
+          "b) IMSS",
+          "c) INFONAVIT",
+          "d) CONSAR"
+        ],
+        correct: 1,
+        explanation: "El IMSS (Instituto Mexicano del Seguro Social) atiende a los trabajadores afiliados del sector privado."
+      },
+      {
+        id: 8,
+        question: "Concepto que permite comprender mejor los productos financieros:",
+        options: [
+          "a) Coyotaje",
+          "b) Educación financiera",
+          "c) Minusvalía",
+          "d) Comisión"
+        ],
+        correct: 1,
+        explanation: "La educación financiera es la herramienta clave para tomar decisiones inteligentes sobre tu presupuesto y retiro."
       }
     ]
   },
   version2: {
     id: "version2",
-    name: "Versión 2: ¡La Llave Maestra! (Verdadero o Falso)",
+    name: "Round 2: Relevo por Equipos (Verdadero / Falso)",
     mode: "boolean",
     questions: [
+      // Set Primer Equipo (Preguntas 1-5)
       {
         id: 1,
-        question: "¡La patada voladora al ahorro informal! ¿Guardar dinero 'bajo el colchón' te protege adecuadamente contra la inflación?",
+        teamSet: "Set Primer Equipo",
+        question: "¿Se pueden hacer aportaciones voluntarias a tu cuenta Afore?",
         options: [
-          "A) Verdadero",
-          "B) Falso"
+          "a) Sí (Verdadero)",
+          "b) No (Falso)"
         ],
-        correct: 1,
-        explanation: "¡Falso! Por la inflación, el dinero 'bajo el colchón' pierde poder adquisitivo con el tiempo. Tu Afore lo protege generando rendimientos."
+        correct: 0,
+        explanation: "¡Sí! Cualquier trabajador puede realizar Ahorro Voluntario a partir de $50 pesos desde su celular o tienda."
       },
       {
         id: 2,
-        question: "¡Las SIEFORES Generacionales invierten tus recursos de acuerdo con tu año de nacimiento para maximizar tu rendimiento conforme te acercas al retiro!",
+        teamSet: "Set Primer Equipo",
+        question: "¿Los SIEFORE son las cuentas individuales de los trabajadores?",
         options: [
-          "A) Verdadero",
-          "B) Falso"
+          "a) Sí (Verdadero)",
+          "b) No (Falso)"
         ],
-        correct: 0,
-        explanation: "¡Verdadero! Las SIEFORES Generacionales adaptan la estrategia de inversión a tu grupo de edad para hacer crecer tu dinero de forma óptima."
+        correct: 1,
+        explanation: "¡No! Las SIEFORES son los fondos de inversión donde se invierten los recursos para generar rendimientos."
       },
       {
         id: 3,
-        question: "¡Es fundamental revisar tu Estado de Cuenta de la Afore al menos 3 veces al año para comprobar tus aportaciones patronales y rendimientos!",
+        teamSet: "Set Primer Equipo",
+        question: "¿Un trabajador independiente puede hacer ahorro voluntario?",
         options: [
-          "A) Verdadero",
-          "B) Falso"
+          "a) Sí (Verdadero)",
+          "b) No (Falso)"
         ],
         correct: 0,
-        explanation: "¡Verdadero! Recibirás tu estado de cuenta en enero, mayo y septiembre para verificar que tus cuotas estén al día."
+        explanation: "¡Sí! Los trabajadores independientes pueden abrir su Afore y hacer aportaciones cuando lo deseen."
       },
       {
         id: 4,
-        question: "¡Los rendimientos que genera tu dinero en la Afore se reinvierten automáticamente acumulando ganancias sobre ganancias gracias al Interés Compuesto!",
+        teamSet: "Set Primer Equipo",
+        question: "¿Debes dejar de revisar las comisiones una vez que elegiste tu Afore?",
         options: [
-          "A) Verdadero",
-          "B) Falso"
+          "a) Sí (Verdadero)",
+          "b) No (Falso)"
         ],
-        correct: 0,
-        explanation: "¡Verdadero! El interés compuesto hace que tus rendimientos generen nuevos rendimientos en un constante efecto bola de nieve."
+        correct: 1,
+        explanation: "¡No! Es fundamental comparar comisiones y rendimientos periódicamente con el Semáforo de la CONSAR."
       },
       {
         id: 5,
-        question: "¡Un trabajador NUNCA tiene derecho a cambiarse de Afore, debiendo permanecer obligatoriamente en la misma toda su vida laboral!",
+        teamSet: "Set Primer Equipo",
+        question: "¿Las Afores se encargan de administrar los fondos para el retiro?",
         options: [
-          "A) Verdadero",
-          "B) Falso"
+          "a) Sí (Verdadero)",
+          "b) No (Falso)"
+        ],
+        correct: 0,
+        explanation: "¡Sí! Su función principal es administrar, resguardar e invertir tu dinero para la pensión futura."
+      },
+      // Set Segundo Equipo (Preguntas 6-10)
+      {
+        id: 6,
+        teamSet: "Set Segundo Equipo",
+        question: "¿Debes cambiarte de Afore solo porque cambiaste de empleo?",
+        options: [
+          "a) Sí (Verdadero)",
+          "b) No (Falso)"
         ],
         correct: 1,
-        explanation: "¡Falso! Cada trabajador ejerciendo su derecho libre puede realizar un Traspaso a la Afore que le brinde mejores rendimientos y comisiones."
+        explanation: "¡No! Tu cuenta de Afore es única y te pertenece a ti sin importar cuántas veces cambies de trabajo."
+      },
+      {
+        id: 7,
+        teamSet: "Set Segundo Equipo",
+        question: "¿El ahorro voluntario puede ayudarte a tener una mejor pensión?",
+        options: [
+          "a) Sí (Verdadero)",
+          "b) No (Falso)"
+        ],
+        correct: 0,
+        explanation: "¡Sí! El Ahorro Voluntario incrementa el saldo final y aprovecha el interés compuesto para subir tu pensión."
+      },
+      {
+        id: 8,
+        teamSet: "Set Segundo Equipo",
+        question: "¿Guardar tu dinero «bajo el colchón» lo hace crecer?",
+        options: [
+          "a) Sí (Verdadero)",
+          "b) No (Falso)"
+        ],
+        correct: 1,
+        explanation: "¡No! Guardar dinero en efectivo en casa hace que pierda poder de compra debido a la inflación."
+      },
+      {
+        id: 9,
+        teamSet: "Set Segundo Equipo",
+        question: "¿La CONSAR es la autoridad que regula el Sistema de Ahorro para el Retiro?",
+        options: [
+          "a) Sí (Verdadero)",
+          "b) No (Falso)"
+        ],
+        correct: 0,
+        explanation: "¡Sí! La CONSAR regula, supervisa e inspecciona el correcto funcionamiento del SAR en México."
+      },
+      {
+        id: 10,
+        teamSet: "Set Segundo Equipo",
+        question: "¿El «coyotaje» es un trámite oficial y recomendable?",
+        options: [
+          "a) Sí (Verdadero)",
+          "b) No (Falso)"
+        ],
+        correct: 1,
+        explanation: "¡No! Es un fraude. Todos los trámites del SAR son totalmente gratuitos y personales."
       }
     ]
   },
   version3: {
     id: "version3",
-    name: "Versión 3: ¡Combate de Campeones! (Respuesta Abierta)",
+    name: "Round 3: Respuesta Abierta (Tercera Caída · Definitoria)",
     mode: "open",
     questions: [
       {
         id: 1,
-        question: "¡El relevo australiano del ahorro! ¿Quiénes realizan las aportaciones a tu cuenta individual en el esquema tripartito de la Afore?",
+        question: "Si el salario mínimo diario es $315.04, ¿cuánto es el salario mínimo mensual considerando 30 días?",
         options: [],
         correct: null,
-        answer: "El Patrón, el Gobierno Federal y el Trabajador (Aportación Tripartita).",
-        explanation: "El ahorro para el retiro es un esfuerzo conjunto tripartito impulsado por tu empleador, el Estado y tus aportaciones."
+        answer: "$9,451.20 (315.04 × 30)",
+        explanation: "Multiplicando $315.04 × 30 días = $9,451.20 pesos mensuales."
       },
       {
         id: 2,
-        question: "¡El lazo al cuello al presupuesto! ¿A qué se le conoce como 'gastos hormiga' en tu economía diaria?",
+        question: "Ana compra un raspado de $15 todos los días. ¿Cuánto gasta al mes en ese gasto hormiga?",
         options: [],
         correct: null,
-        answer: "Pequeños gastos diarios imperceptibles (cafés, botanas, suscripciones no usadas) que van mermando tu capacidad de ahorro.",
-        explanation: "Sumados a lo largo del año, los gastos hormiga representan miles de pesos que podrías canalizar a tu Ahorro Voluntario."
+        answer: "$450.00 (15 × 30)",
+        explanation: "Multiplicando $15 × 30 días del mes = $450.00 pesos al mes."
       },
       {
         id: 3,
-        question: "¡La victoria por conteo de 3 segundos! ¿A partir de qué edad puedes iniciar el trámite de pensión por Cesantía en Edad Avanzada?",
+        question: "Si tu sueldo es de $11,291 mensuales, ¿cuál es tu salario diario? (divide entre 30)",
         options: [],
         correct: null,
-        answer: "A partir de los 60 años de edad.",
-        explanation: "Al cumplir 60 años puedes solicitar la pensión por Cesantía en Edad Avanzada (o a los 65 años por Vejez)."
+        answer: "$376.37",
+        explanation: "Dividiendo $11,291 entre 30 días = $376.37 pesos diarios."
       },
       {
         id: 4,
-        question: "¡Defensa personal financiera! ¿Qué gran beneficio fiscal te brinda hacer Ahorro Voluntario con visión a largo plazo?",
+        question: "Menciona una forma de controlar un gasto hormiga.",
         options: [],
         correct: null,
-        answer: "Es deducible de impuestos en tu Declaración Anual ante el SAT.",
-        explanation: "El Ahorro Voluntario a largo plazo te permite deducir impuestos, reduciendo tu ISR o generando saldo a favor en tu declaración anual."
+        answer: "Reducir su consumo (ej. preparar el café o raspado en casa, registrar tus gastos).",
+        explanation: "Planificar tus compras y preparar tus alimentos en casa ayuda a controlar los fugas de dinero."
       },
       {
         id: 5,
-        question: "¡El Cinturón de Campeón Financiero! ¿Cuáles son las herramientas gratuitas que ofrece la CONSAR para comparar Afores?",
+        question: "¿Qué es una SIEFORE?",
         options: [],
         correct: null,
-        answer: "El Semáforo de Rendimiento Neto y las Calculadoras de Retiro CONSAR.",
-        explanation: "El Semáforo de Rendimiento Neto te permite comparar qué Afore te da las mejores ganancias reales según tu grupo de edad."
+        answer: "El fondo donde se invierte tu dinero según tu año de nacimiento (fondo generacional).",
+        explanation: "Las SIEFORES Generacionales invierten tus recursos adaptándose a tu grupo de edad."
+      },
+      {
+        id: 6,
+        question: "¿Qué es la renta vitalicia?",
+        options: [],
+        correct: null,
+        answer: "El pago mensual de una pensión de por vida contratado con una aseguradora.",
+        explanation: "Es una modalidad de pensión contratada con una aseguradora para recibir pagos de por vida."
       }
     ]
   }

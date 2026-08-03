@@ -1,7 +1,7 @@
 /**
  * CONSAR - Quizz Lucha Libre Financiera
  * Core Logic, Dual Sync Engine (Supabase Realtime Broadcast + BroadcastChannel + LocalStorage),
- * Boxing Ring Bell Audio Generator & Web Audio Synthesizer, Confetti & State Management.
+ * Boxing Ring Bell Audio Player (Sonidocampanadebox.mp3), Confetti & State Management.
  */
 
 const DEFAULT_STATE = {
@@ -67,7 +67,7 @@ class TriviaApp {
       }
     });
 
-    // 3. Supabase Realtime Multidispositivo (Tablet Moderador en Wi-Fi <-> PC Proyector en Vivo)
+    // 3. Supabase Realtime Multidispositivo (room-trivia / accion_trivia)
     this.initSupabaseRealtime();
   }
 
@@ -75,20 +75,22 @@ class TriviaApp {
     const rawUrl = this.supabaseUrl || DEFAULT_SUPABASE_URL;
     const rawKey = this.supabaseKey || DEFAULT_SUPABASE_KEY;
 
-    // Normaliza la URL removiendo sufijos como /rest/v1/ si fueron ingresados
+    // Normaliza la URL removiendo sufijos /rest/v1/
     const cleanUrl = rawUrl.replace(/\/rest\/v1\/?$/, "").replace(/\/$/, "");
 
     if (window.supabase && cleanUrl && rawKey) {
       try {
         this.supabaseClient = window.supabase.createClient(cleanUrl, rawKey);
-        this.realtimeChannel = this.supabaseClient.channel('consar_trivia_realtime_room');
+        // Canal global: room-trivia
+        this.realtimeChannel = this.supabaseClient.channel('room-trivia');
 
-        this.realtimeChannel.on('broadcast', { event: 'SYNC_STATE' }, (payload) => {
+        // Escucha del evento: accion_trivia
+        this.realtimeChannel.on('broadcast', { event: 'accion_trivia' }, (payload) => {
           if (payload && payload.payload && payload.payload.state) {
             this.updateStateLocal(payload.payload.state, false, payload.payload.actionEvent);
           }
         }).subscribe((status) => {
-          console.log("🟢 Supabase Realtime Status:", status);
+          console.log("🟢 Supabase Realtime Channel 'room-trivia' Status:", status);
         });
       } catch (e) {
         console.warn("Supabase Realtime Initialization Error:", e);
@@ -137,12 +139,12 @@ class TriviaApp {
       }
     }
 
-    // Sync via Supabase Realtime Broadcast (Multidispositivo Tablet <-> PC)
+    // Sync via Supabase Realtime Broadcast (Canal room-trivia / Evento accion_trivia)
     if (this.realtimeChannel) {
       try {
         this.realtimeChannel.send({
           type: 'broadcast',
-          event: 'SYNC_STATE',
+          event: 'accion_trivia',
           payload: syncData
         });
       } catch (e) {
@@ -240,48 +242,14 @@ class TriviaApp {
     return true;
   }
 
-  // --- AUDIO SYNTHESIS & BOXING RING BELL PRELOAD ---
+  // --- AUDIO PRELOAD: Sonidocampanadebox.mp3 ---
 
   initBoxingBellAudio() {
     try {
-      const sampleRate = 44100;
-      const duration = 1.2;
-      const numSamples = Math.floor(sampleRate * duration);
-      const buffer = new Int16Array(numSamples);
-
-      for (let i = 0; i < numSamples; i++) {
-        const t = i / sampleRate;
-        const decay = Math.exp(-3.2 * t);
-        const s1 = Math.sin(2 * Math.PI * 1200 * t);
-        const s2 = 0.5 * Math.sin(2 * Math.PI * 2400 * t);
-        const s3 = 0.25 * Math.sin(2 * Math.PI * 3600 * t);
-        const sample = (s1 + s2 + s3) * decay * 0.8;
-        buffer[i] = Math.max(-32768, Math.min(32767, sample * 32767));
-      }
-
-      const header = new ArrayBuffer(44);
-      const view = new DataView(header);
-      view.setUint32(0, 0x52494646, false); // "RIFF"
-      view.setUint32(4, 36 + numSamples * 2, true);
-      view.setUint32(8, 0x57415645, false); // "WAVE"
-      view.setUint32(12, 0x666d7420, false); // "fmt "
-      view.setUint32(16, 16, true);
-      view.setUint16(20, 1, true); // PCM
-      view.setUint16(22, 1, true); // Mono
-      view.setUint32(24, sampleRate, true);
-      view.setUint32(28, sampleRate * 2, true);
-      view.setUint16(32, 2, true);
-      view.setUint16(34, 16, true);
-      view.setUint32(36, 0x64617461, false); // "data"
-      view.setUint32(40, numSamples * 2, true);
-
-      const blob = new Blob([header, buffer], { type: 'audio/wav' });
-      const audioUrl = URL.createObjectURL(blob);
-
-      this.bellAudio = new Audio(audioUrl);
+      this.bellAudio = new Audio("Sonidocampanadebox.mp3");
       this.bellAudio.preload = "auto";
     } catch (e) {
-      console.warn("Could not generate preloaded boxing bell WAV:", e);
+      console.warn("Could not load Sonidocampanadebox.mp3:", e);
     }
   }
 
