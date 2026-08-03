@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CONSAR - Marcador del Ring</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            consarGuinda: '#691C32',
+            consarDorado: '#C5A059',
+            tecnica: '#0284C7',
+            ruda: '#DC2626'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-950 min-h-screen text-white flex flex-col justify-between p-4 md:p-8 select-none font-sans overflow-hidden">
+
+  <!-- Header Banner -->
+  <header class="w-full max-w-6xl mx-auto flex items-center justify-between border-b border-amber-500/30 pb-4">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-slate-950 font-bold">
+        <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24">
+          <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-5.45 9-12V7l-9-5z"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-xl font-extrabold text-white">MARCADOR DE RING <span class="text-amber-400 font-lucha">CONSAR</span></h1>
+        <p class="text-xs text-slate-400">Educación Financiera en Vivo</p>
+      </div>
+    </div>
+
+    <!-- Round Status Badge -->
+    <div class="bg-slate-900 border border-amber-500/40 px-5 py-2 rounded-2xl flex items-center gap-3 shadow-lg">
+      <span class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
+      <span class="text-sm font-black text-amber-300 uppercase tracking-widest" id="roundStatus">
+        ROUND DE COMBATE
+      </span>
+    </div>
+  </header>
+
+  <!-- DUAL TEAM SCOREBOARD GRID -->
+  <main class="w-full max-w-6xl mx-auto my-auto py-6 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 flex-1">
+
+    <!-- ESQUINA TÉCNICA (BLUE) -->
+    <div class="bg-slate-900 border-4 border-sky-500 rounded-3xl p-6 md:p-10 flex flex-col justify-between shadow-2xl shadow-sky-500/20 relative overflow-hidden group">
+      <!-- Glow Effect -->
+      <div class="absolute -right-16 -top-16 w-48 h-48 bg-sky-500/10 rounded-full blur-3xl group-hover:bg-sky-500/20 transition-all"></div>
+
+      <!-- Team Header -->
+      <div class="flex items-center justify-between border-b border-sky-500/30 pb-4 relative z-10">
+        <div class="flex items-center gap-3">
+          <span class="text-4xl">🤼‍♂️</span>
+          <div>
+            <h2 class="text-2xl md:text-3xl font-extrabold text-sky-400 tracking-wider">ESQUINA TÉCNICA</h2>
+            <span class="text-xs font-bold text-sky-200/70 uppercase">Técnicos del Ahorro</span>
+          </div>
+        </div>
+        <!-- Rounds Count Badge -->
+        <div class="text-right">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-widest block">Rounds Ganados</span>
+          <span class="text-2xl font-black text-amber-400" id="caidasTecnica">0</span>
+        </div>
+      </div>
+
+      <!-- Giant Score Number -->
+      <div class="my-8 text-center relative z-10">
+        <span class="text-8xl md:text-9xl font-black text-white tracking-tighter drop-shadow-lg font-mono" id="scoreTecnica">
+          0
+        </span>
+        <span class="block text-xs font-extrabold text-sky-300 tracking-widest uppercase mt-2">Puntos Acumulados</span>
+      </div>
+
+      <!-- Visual Round Indicators (Stars / Bells) -->
+      <div class="flex items-center justify-center gap-3 pt-4 border-t border-sky-500/30 relative z-10" id="starsTecnica">
+        <span class="text-2xl opacity-30">⭐</span>
+        <span class="text-2xl opacity-30">⭐</span>
+        <span class="text-2xl opacity-30">⭐</span>
+      </div>
+    </div>
+
+    <!-- ESQUINA RUDA (RED) -->
+    <div class="bg-slate-900 border-4 border-rose-500 rounded-3xl p-6 md:p-10 flex flex-col justify-between shadow-2xl shadow-rose-500/20 relative overflow-hidden group">
+      <!-- Glow Effect -->
+      <div class="absolute -right-16 -top-16 w-48 h-48 bg-rose-500/10 rounded-full blur-3xl group-hover:bg-rose-500/20 transition-all"></div>
+
+      <!-- Team Header -->
+      <div class="flex items-center justify-between border-b border-rose-500/30 pb-4 relative z-10">
+        <div class="flex items-center gap-3">
+          <span class="text-4xl">🤼‍♀️</span>
+          <div>
+            <h2 class="text-2xl md:text-3xl font-extrabold text-rose-400 tracking-wider">ESQUINA RUDA</h2>
+            <span class="text-xs font-bold text-rose-200/70 uppercase">Rudos del Retiro</span>
+          </div>
+        </div>
+        <!-- Rounds Count Badge -->
+        <div class="text-right">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-widest block">Rounds Ganados</span>
+          <span class="text-2xl font-black text-amber-400" id="caidasRuda">0</span>
+        </div>
+      </div>
+
+      <!-- Giant Score Number -->
+      <div class="my-8 text-center relative z-10">
+        <span class="text-8xl md:text-9xl font-black text-white tracking-tighter drop-shadow-lg font-mono" id="scoreRuda">
+          0
+        </span>
+        <span class="block text-xs font-extrabold text-rose-300 tracking-widest uppercase mt-2">Puntos Acumulados</span>
+      </div>
+
+      <!-- Visual Round Indicators (Stars / Bells) -->
+      <div class="flex items-center justify-center gap-3 pt-4 border-t border-rose-500/30 relative z-10" id="starsRuda">
+        <span class="text-2xl opacity-30">⭐</span>
+        <span class="text-2xl opacity-30">⭐</span>
+        <span class="text-2xl opacity-30">⭐</span>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="w-full max-w-6xl mx-auto text-center py-3 text-xs text-slate-500 border-t border-slate-800">
+    <p>CONSAR • Marcador de Arena Ring de Lucha Libre Financiera</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="questions.js"></script>
+  <script src="app.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      triviaApp.subscribe((state) => {
+        // Scores
+        document.getElementById('scoreTecnica').innerText = state.scores.tecnica;
+        document.getElementById('scoreRuda').innerText = state.scores.ruda;
+        document.getElementById('caidasTecnica').innerText = state.caidas.tecnica;
+        document.getElementById('caidasRuda').innerText = state.caidas.ruda;
+
+        // Render Stars
+        renderStars('starsTecnica', state.caidas.tecnica);
+        renderStars('starsRuda', state.caidas.ruda);
+      });
+    });
+
+    function renderStars(containerId, count) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      const totalStars = 3;
+      for (let i = 0; i < totalStars; i++) {
+        const star = document.createElement('span');
+        star.className = `text-2xl ${i < count ? 'text-amber-400 animate-pulse' : 'opacity-20 text-slate-500'}`;
+        star.innerText = '⭐';
+        container.appendChild(star);
+      }
+    }
+  </script>
+</body>
+</html>

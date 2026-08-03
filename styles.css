@@ -1,0 +1,144 @@
+@import url('https://fonts.googleapis.com/css2?family=Bangers&family=Outfit:wght@400;600;800;900&display=swap');
+
+/* --- Brand Variables & Tokens --- */
+:root {
+  --consar-guinda: #691C32;
+  --consar-guinda-dark: #4A1222;
+  --consar-dorado: #C5A059;
+  --consar-dorado-light: #E5C378;
+  --consar-navy: #102A43;
+  --tecnica-blue: #0284C7;
+  --tecnica-blue-glow: rgba(2, 132, 199, 0.5);
+  --ruda-red: #DC2626;
+  --ruda-red-glow: rgba(220, 38, 38, 0.5);
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: #0B0F19;
+  color: #F8FAFC;
+  overflow-x: hidden;
+}
+
+.font-lucha {
+  font-family: 'Bangers', cursive;
+  letter-spacing: 0.05em;
+}
+
+/* --- Ring Ropes Styling --- */
+.ring-ropes-bg {
+  background: linear-gradient(180deg, 
+    #0F172A 0%, 
+    #1E1B4B 40%, 
+    #31121E 100%);
+  position: relative;
+}
+
+.ring-ropes-bg::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: 
+    repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(197, 160, 89, 0.08) 40px, rgba(197, 160, 89, 0.08) 42px),
+    repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(197, 160, 89, 0.08) 40px, rgba(197, 160, 89, 0.08) 42px);
+  pointer-events: none;
+}
+
+/* --- Glassmorphism Cards --- */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.glass-panel-gold {
+  background: rgba(26, 20, 15, 0.85);
+  backdrop-filter: blur(16px);
+  border: 2px solid var(--consar-dorado);
+  box-shadow: 0 0 25px rgba(197, 160, 89, 0.25);
+}
+
+/* --- Animations --- */
+@keyframes shakeRopes {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  15% { transform: translateY(-8px) rotate(-1.5deg); }
+  30% { transform: translateY(8px) rotate(1.5deg); }
+  45% { transform: translateY(-4px) rotate(-0.5deg); }
+  60% { transform: translateY(4px) rotate(0.5deg); }
+}
+
+.animate-ring-shake {
+  animation: shakeRopes 0.6s ease-in-out;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(197, 160, 89, 0.3); }
+  50% { box-shadow: 0 0 45px rgba(197, 160, 89, 0.75); }
+}
+
+.animate-pulse-gold {
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.7); opacity: 0; }
+  80% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-pop-in {
+  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Flash Score Animation Overlay */
+@keyframes scoreBurst {
+  0% { transform: scale(0.2) rotate(-10deg); opacity: 0; }
+  50% { transform: scale(1.1) rotate(2deg); opacity: 1; }
+  75% { transform: scale(0.95) rotate(-1deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.animate-score-burst {
+  animation: scoreBurst 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* --- Lucha Libre Team Colors --- */
+.bg-tecnica {
+  background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);
+}
+
+.bg-ruda {
+  background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%);
+}
+
+.border-tecnica {
+  border-color: #38BDF8;
+}
+
+.border-ruda {
+  border-color: #F87171;
+}
+
+.text-tecnica {
+  color: #38BDF8;
+}
+
+.text-ruda {
+  color: #F87171;
+}
+
+/* --- Custom Scrollbar --- */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0F172A;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--consar-guinda);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--consar-dorado);
+}
