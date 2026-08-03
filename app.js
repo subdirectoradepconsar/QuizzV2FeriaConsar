@@ -1,6 +1,7 @@
 /**
  * CONSAR - Quizz Lucha Libre Financiera
- * Core Logic, Sync Engine (BroadcastChannel + LocalStorage), Web Audio Synthesizer, Confetti & State Management.
+ * Core Logic, Dual Sync Engine (Supabase Realtime Broadcast + BroadcastChannel + LocalStorage),
+ * Boxing Ring Bell Audio Generator & Web Audio Synthesizer, Confetti & State Management.
  */
 
 const DEFAULT_STATE = {
@@ -9,10 +10,14 @@ const DEFAULT_STATE = {
   isQuestionVisible: true,
   isAnswerRevealed: false,
   scores: { tecnica: 0, ruda: 0 },
-  caidas: { tecnica: 0, ruda: 0 }, // Representa los rounds ganados por equipo
+  caidas: { tecnica: 0, ruda: 0 }, // Rounds ganados por equipo
   lastEvent: null,
   timestamp: Date.now()
 };
+
+// Credenciales oficiales de Supabase para Sincronización en Tiempo Real Multidispositivo
+const DEFAULT_SUPABASE_URL = "https://ynzxfxtfflniyjanxiqn.supabase.co";
+const DEFAULT_SUPABASE_KEY = "sb_secret_VFRCbDnPQjxM80PXkOvJZw_1mmIrjqA";
 
 class TriviaApp {
   constructor() {
@@ -20,14 +25,23 @@ class TriviaApp {
     this.storageKey = "consar_lucha_state_v1";
     this.broadcast = null;
     this.audioCtx = null;
+    this.bellAudio = null;
+
+    // Supabase Realtime Client
+    this.supabaseClient = null;
+    this.realtimeChannel = null;
+    this.supabaseUrl = localStorage.getItem("consar_supabase_url") || DEFAULT_SUPABASE_URL;
+    this.supabaseKey = localStorage.getItem("consar_supabase_key") || DEFAULT_SUPABASE_KEY;
 
     this.state = this.loadState();
     this.listeners = [];
 
     this.initSync();
+    this.initBoxingBellAudio();
   }
 
   initSync() {
+    // 1. Local BroadcastChannel (Mismo navegador)
     if ('BroadcastChannel' in window) {
       try {
         this.broadcast = new BroadcastChannel(this.channelName);
@@ -41,6 +55,7 @@ class TriviaApp {
       }
     }
 
+    // 2. LocalStorage Storage Listener (Mismo navegador/pestañas)
     window.addEventListener("storage", (e) => {
       if (e.key === this.storageKey && e.newValue) {
         try {
@@ -51,6 +66,42 @@ class TriviaApp {
         }
       }
     });
+
+    // 3. Supabase Realtime Multidispositivo (Tablet Moderador en Wi-Fi <-> PC Proyector en Vivo)
+    this.initSupabaseRealtime();
+  }
+
+  initSupabaseRealtime() {
+    const rawUrl = this.supabaseUrl || DEFAULT_SUPABASE_URL;
+    const rawKey = this.supabaseKey || DEFAULT_SUPABASE_KEY;
+
+    // Normaliza la URL removiendo sufijos como /rest/v1/ si fueron ingresados
+    const cleanUrl = rawUrl.replace(/\/rest\/v1\/?$/, "").replace(/\/$/, "");
+
+    if (window.supabase && cleanUrl && rawKey) {
+      try {
+        this.supabaseClient = window.supabase.createClient(cleanUrl, rawKey);
+        this.realtimeChannel = this.supabaseClient.channel('consar_trivia_realtime_room');
+
+        this.realtimeChannel.on('broadcast', { event: 'SYNC_STATE' }, (payload) => {
+          if (payload && payload.payload && payload.payload.state) {
+            this.updateStateLocal(payload.payload.state, false, payload.payload.actionEvent);
+          }
+        }).subscribe((status) => {
+          console.log("🟢 Supabase Realtime Status:", status);
+        });
+      } catch (e) {
+        console.warn("Supabase Realtime Initialization Error:", e);
+      }
+    }
+  }
+
+  setSupabaseConfig(url, key) {
+    this.supabaseUrl = url ? url.trim() : DEFAULT_SUPABASE_URL;
+    this.supabaseKey = key ? key.trim() : DEFAULT_SUPABASE_KEY;
+    localStorage.setItem("consar_supabase_url", this.supabaseUrl);
+    localStorage.setItem("consar_supabase_key", this.supabaseKey);
+    this.initSupabaseRealtime();
   }
 
   loadState() {
@@ -77,11 +128,25 @@ class TriviaApp {
       console.error("LocalStorage write error:", e);
     }
 
+    // Sync via BroadcastChannel
     if (this.broadcast) {
       try {
         this.broadcast.postMessage(syncData);
       } catch (e) {
         console.error("BroadcastChannel postMessage error:", e);
+      }
+    }
+
+    // Sync via Supabase Realtime Broadcast (Multidispositivo Tablet <-> PC)
+    if (this.realtimeChannel) {
+      try {
+        this.realtimeChannel.send({
+          type: 'broadcast',
+          event: 'SYNC_STATE',
+          payload: syncData
+        });
+      } catch (e) {
+        console.error("Supabase Realtime send error:", e);
       }
     }
 
@@ -99,7 +164,6 @@ class TriviaApp {
 
   subscribe(callback) {
     this.listeners.push(callback);
-    // Initial call
     callback(this.state, null);
   }
 
@@ -142,7 +206,7 @@ class TriviaApp {
     if (this.state.scores[team] !== undefined) {
       this.state.scores[team] += amount;
       
-      // Cada 3 puntos son un round ganado //
+      // Cada 3 puntos son un round ganado
       if (this.state.scores[team] >= 3 && this.state.scores[team] % 3 === 0) {
         this.state.caidas[team] += 1;
       }
@@ -176,6 +240,51 @@ class TriviaApp {
     return true;
   }
 
+  // --- AUDIO SYNTHESIS & BOXING RING BELL PRELOAD ---
+
+  initBoxingBellAudio() {
+    try {
+      const sampleRate = 44100;
+      const duration = 1.2;
+      const numSamples = Math.floor(sampleRate * duration);
+      const buffer = new Int16Array(numSamples);
+
+      for (let i = 0; i < numSamples; i++) {
+        const t = i / sampleRate;
+        const decay = Math.exp(-3.2 * t);
+        const s1 = Math.sin(2 * Math.PI * 1200 * t);
+        const s2 = 0.5 * Math.sin(2 * Math.PI * 2400 * t);
+        const s3 = 0.25 * Math.sin(2 * Math.PI * 3600 * t);
+        const sample = (s1 + s2 + s3) * decay * 0.8;
+        buffer[i] = Math.max(-32768, Math.min(32767, sample * 32767));
+      }
+
+      const header = new ArrayBuffer(44);
+      const view = new DataView(header);
+      view.setUint32(0, 0x52494646, false); // "RIFF"
+      view.setUint32(4, 36 + numSamples * 2, true);
+      view.setUint32(8, 0x57415645, false); // "WAVE"
+      view.setUint32(12, 0x666d7420, false); // "fmt "
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true); // PCM
+      view.setUint16(22, 1, true); // Mono
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      view.setUint32(36, 0x64617461, false); // "data"
+      view.setUint32(40, numSamples * 2, true);
+
+      const blob = new Blob([header, buffer], { type: 'audio/wav' });
+      const audioUrl = URL.createObjectURL(blob);
+
+      this.bellAudio = new Audio(audioUrl);
+      this.bellAudio.preload = "auto";
+    } catch (e) {
+      console.warn("Could not generate preloaded boxing bell WAV:", e);
+    }
+  }
+
   initAudio() {
     if (!this.audioCtx) {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -190,6 +299,24 @@ class TriviaApp {
 
   playBellSound() {
     this.initAudio();
+
+    if (this.bellAudio) {
+      try {
+        this.bellAudio.currentTime = 0;
+        const promise = this.bellAudio.play();
+        if (promise !== undefined) {
+          promise.catch(() => this.playSynthBellFallback());
+        }
+        return;
+      } catch (e) {
+        console.warn("Audio play error, using synth fallback:", e);
+      }
+    }
+
+    this.playSynthBellFallback();
+  }
+
+  playSynthBellFallback() {
     if (!this.audioCtx) return;
 
     const playStrike = (timeOffset) => {
@@ -338,7 +465,7 @@ class TriviaApp {
       particles.forEach(p => {
         p.x += p.vx;
         p.y += p.vy;
-        p.vy += 0.4; // gravity
+        p.vy += 0.4;
         p.rotation += p.rSpeed;
         p.opacity = Math.max(0, 1 - elapsed / 2500);
 

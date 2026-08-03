@@ -6,6 +6,8 @@
   <title>CONSAR - Pantalla Gigante de Lucha Libre</title>
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Supabase JS Client via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="styles.css">
   <script>
     tailwind.config = {
@@ -250,11 +252,7 @@
 
       } else {
         // MODE 1 & 2: Multiple Choice or True/False
-        if (currentVersion.mode === "boolean") {
-          optionsGrid.className = "grid grid-cols-1 md:grid-cols-2 gap-5";
-        } else {
-          optionsGrid.className = "grid grid-cols-1 md:grid-cols-2 gap-5";
-        }
+        optionsGrid.className = "grid grid-cols-1 md:grid-cols-2 gap-5";
 
         const letters = ['A', 'B', 'C', 'D'];
         currentQuestion.options.forEach((optText, idx) => {
