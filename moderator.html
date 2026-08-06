@@ -303,30 +303,13 @@
         👑
       </div>
       <h3 class="text-3xl font-black text-yellow-400 mb-2">¡Pelea Finalizada!</h3>
-      <p class="text-xl text-white mb-4 font-bold">
+      <p class="text-xl text-white mb-6 font-bold">
         Ganador: <span class="text-amber-300 font-extrabold text-2xl uppercase" id="modVictoryWinnerName">Esquina Técnica</span>
       </p>
-      
-      <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs text-slate-400 mb-6 leading-relaxed">
-        🏆 ¡La pelea ha concluido con éxito! Selecciona qué deseas hacer a continuación:
-      </div>
 
-      <div class="flex flex-col gap-3">
-        <!-- 1. Volver al Panel del Moderador (Conserva Puntos y Estado) -->
-        <button onclick="dismissVictoryModal()" class="w-full min-h-[50px] py-3.5 bg-gradient-to-r from-amber-500 to-yellow-600 hover:brightness-110 text-slate-950 font-black rounded-xl text-sm shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all">
-          <span>📋 Volver al Panel (Conservar Puntos y Marcador)</span>
-        </button>
-
-        <!-- 2. Reiniciar Pelea (Limpia Marcador para nuevo juego) -->
-        <button onclick="resetMatchDirectly()" class="w-full min-h-[50px] py-3 bg-slate-800 hover:bg-slate-700 text-rose-300 font-bold rounded-xl text-sm border border-rose-500/30 flex items-center justify-center gap-2 active:scale-95 transition-all">
-          <span>⚡ Reiniciar Nueva Pelea (Limpiar Marcador a 0)</span>
-        </button>
-
-        <!-- 3. Regresar al Menú Inicial (index.html) -->
-        <a href="index.html" class="w-full min-h-[46px] py-2.5 bg-slate-950 hover:bg-slate-900 text-slate-400 font-semibold rounded-xl text-xs border border-slate-800 flex items-center justify-center gap-2 transition-all">
-          <span>🏠 Regresar al Menú Principal (Inicio)</span>
-        </a>
-      </div>
+      <button onclick="dismissVictoryModal()" class="w-full min-h-[54px] py-4 bg-gradient-to-r from-amber-500 to-yellow-600 hover:brightness-110 text-slate-950 font-black rounded-2xl text-base shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all">
+        <span>📋 Regresar al Panel Moderador</span>
+      </button>
     </div>
   </div>
 
