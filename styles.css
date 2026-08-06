@@ -142,3 +142,36 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--consar-dorado);
 }
+
+/* --- Progress Circles / Dots (Indicadores de Aciertos) --- */
+.progress-dot {
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.15);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: inline-block;
+}
+
+@media (min-width: 768px) {
+  .progress-dot {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+}
+
+.progress-dot-tecnica-active {
+  background: radial-gradient(circle at 35% 35%, #7DD3FC, #0284C7);
+  border-color: #E0F2FE;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.9), inset 0 1px 2px rgba(255, 255, 255, 0.8);
+  transform: scale(1.2);
+}
+
+.progress-dot-ruda-active {
+  background: radial-gradient(circle at 35% 35%, #FCA5A5, #DC2626);
+  border-color: #FEF2F2;
+  box-shadow: 0 0 14px rgba(248, 113, 113, 0.9), inset 0 1px 2px rgba(255, 255, 255, 0.8);
+  transform: scale(1.2);
+}
+

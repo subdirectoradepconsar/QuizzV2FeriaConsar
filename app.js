@@ -4,13 +4,23 @@
  * Boxing Ring Bell Audio Player (Sonidocampanadebox.mp3), Confetti & State Management.
  */
 
+const ROUND_GOALS = {
+  1: 5, // Round 1: Meta 5 aciertos (de 8 preguntas)
+  2: 6, // Round 2: Meta 6 aciertos (de 10 preguntas)
+  3: 4  // Round 3: Meta 4 aciertos (de 6 preguntas)
+};
+
 const DEFAULT_STATE = {
+  round_activo: 1,
   versionId: "version1",
   questionIndex: 0,
   isQuestionVisible: true,
   isAnswerRevealed: false,
+  marcador_global: { equipoA: 0, equipoB: 0 }, // Rounds ganados
+  aciertos_round: { equipoA: 0, equipoB: 0 },  // Aciertos parciales del round activo
+  // Propiedades de retrocompatibilidad
   scores: { tecnica: 0, ruda: 0 },
-  caidas: { tecnica: 0, ruda: 0 }, // Rounds ganados por equipo
+  caidas: { tecnica: 0, ruda: 0 },
   lastEvent: null,
   timestamp: Date.now()
 };
@@ -51,8 +61,11 @@ class TriviaApp {
       try {
         this.broadcast = new BroadcastChannel(this.channelName);
         this.broadcast.onmessage = (event) => {
-          if (event.data && event.data.state) {
-            this.updateStateLocal(event.data.state, false, event.data.actionEvent);
+          if (event.data) {
+            const incState = event.data.estado_trivia || event.data.state;
+            if (incState) {
+              this.updateStateLocal(incState, false, event.data.actionEvent);
+            }
           }
         };
       } catch (e) {
@@ -65,7 +78,10 @@ class TriviaApp {
       if (e.key === this.storageKey && e.newValue) {
         try {
           const parsed = JSON.parse(e.newValue);
-          this.updateStateLocal(parsed.state, false, parsed.actionEvent);
+          const incState = parsed.estado_trivia || parsed.state;
+          if (incState) {
+            this.updateStateLocal(incState, false, parsed.actionEvent);
+          }
         } catch (err) {
           console.error("Error parsing storage state:", err);
         }
@@ -83,18 +99,22 @@ class TriviaApp {
           window.firebase.initializeApp(FIREBASE_CONFIG);
         }
         this.firebaseDb = window.firebase.database();
-        this.dbRef = this.firebaseDb.ref('triviaState');
+        // Escucha principal en el nodo 'estado_trivia' de Firebase
+        this.dbRef = this.firebaseDb.ref('estado_trivia');
 
-        // Escucha en vivo de cambios en la base de datos
         this.dbRef.on('value', (snapshot) => {
           const data = snapshot.val();
-          if (data && data.state) {
-            // Evita bucles infinitos aplicando cambios recibidos de forma local
-            this.updateStateLocal(data.state, false, data.actionEvent);
+          if (data) {
+            // Maneja la lectura directa de estado_trivia o wrappers
+            const incomingState = data.estado_trivia || data.state || data;
+            const actionEvt = data.accion || (data.actionEvent ? data.actionEvent.type : "ACTUALIZAR_MARCADOR");
+            if (incomingState && incomingState.round_activo !== undefined) {
+              this.updateStateLocal(incomingState, false, typeof actionEvt === 'object' ? actionEvt : { type: actionEvt, action: actionEvt });
+            }
           }
         });
 
-        console.log("🔥 Firebase Realtime Database Conectado en nodo 'triviaState'");
+        console.log("🔥 Firebase Realtime Database Conectado en nodo 'estado_trivia'");
       } catch (e) {
         console.warn("Firebase Realtime Database Error:", e);
       }
@@ -106,7 +126,13 @@ class TriviaApp {
       const saved = localStorage.getItem(this.storageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
-        return { ...DEFAULT_STATE, ...parsed.state };
+        const loaded = parsed.estado_trivia || parsed.state || parsed;
+        return {
+          ...DEFAULT_STATE,
+          ...loaded,
+          marcador_global: { ...DEFAULT_STATE.marcador_global, ...(loaded.marcador_global || {}) },
+          aciertos_round: { ...DEFAULT_STATE.aciertos_round, ...(loaded.aciertos_round || {}) }
+        };
       }
     } catch (e) {
       console.warn("Could not read state from localStorage:", e);
@@ -116,7 +142,45 @@ class TriviaApp {
 
   saveAndSyncState(actionEvent = null) {
     this.state.timestamp = Date.now();
-    const syncData = { state: this.state, actionEvent };
+
+    // Actualizar alias retrocompatibles (tecnica = equipoA, ruda = equipoB)
+    this.state.caidas = {
+      tecnica: this.state.marcador_global.equipoA || 0,
+      ruda: this.state.marcador_global.equipoB || 0
+    };
+    this.state.scores = {
+      tecnica: this.state.aciertos_round.equipoA || 0,
+      ruda: this.state.aciertos_round.equipoB || 0
+    };
+
+    const actionStr = typeof actionEvent === 'string' 
+      ? actionEvent 
+      : (actionEvent?.action || actionEvent?.type || "ACTUALIZAR_MARCADOR");
+
+    // Estructura exacta requerida para Firebase 'estado_trivia'
+    const estadoTriviaData = {
+      round_activo: this.state.round_activo || 1,
+      marcador_global: {
+        equipoA: this.state.marcador_global.equipoA || 0,
+        equipoB: this.state.marcador_global.equipoB || 0
+      },
+      aciertos_round: {
+        equipoA: this.state.aciertos_round.equipoA || 0,
+        equipoB: this.state.aciertos_round.equipoB || 0
+      },
+      versionId: this.state.versionId || "version1",
+      questionIndex: this.state.questionIndex || 0,
+      isQuestionVisible: this.state.isQuestionVisible !== undefined ? this.state.isQuestionVisible : true,
+      isAnswerRevealed: this.state.isAnswerRevealed !== undefined ? this.state.isAnswerRevealed : false,
+      accion: actionStr,
+      timestamp: this.state.timestamp
+    };
+
+    const syncData = {
+      state: this.state,
+      estado_trivia: estadoTriviaData,
+      actionEvent: typeof actionEvent === 'string' ? { type: actionEvent, action: actionEvent } : actionEvent
+    };
 
     // Save to LocalStorage
     try {
@@ -134,28 +198,59 @@ class TriviaApp {
       }
     }
 
-    // Sync via Firebase Realtime Database (Tablet <-> PC)
+    // Sync via Firebase Realtime Database
     if (this.dbRef) {
       try {
-        this.dbRef.set({
-          state: this.state,
-          actionEvent: actionEvent,
-          timestamp: Date.now()
-        });
+        this.dbRef.set(estadoTriviaData);
       } catch (e) {
         console.error("Firebase Realtime Database write error:", e);
       }
     }
 
-    this.notifyListeners(actionEvent);
+    this.notifyListeners(syncData.actionEvent);
   }
 
   updateStateLocal(newState, doSync = true, actionEvent = null) {
+    if (newState.marcador_global) {
+      this.state.marcador_global = { ...this.state.marcador_global, ...newState.marcador_global };
+    }
+    if (newState.aciertos_round) {
+      this.state.aciertos_round = { ...this.state.aciertos_round, ...newState.aciertos_round };
+    }
+
+    // Adaptador para llaves legacy
+    if (newState.scores && !newState.aciertos_round) {
+      this.state.aciertos_round = { equipoA: newState.scores.tecnica || 0, equipoB: newState.scores.ruda || 0 };
+    }
+    if (newState.caidas && !newState.marcador_global) {
+      this.state.marcador_global = { equipoA: newState.caidas.tecnica || 0, equipoB: newState.caidas.ruda || 0 };
+    }
+
     this.state = { ...this.state, ...newState };
+
+    if (!this.state.marcador_global) this.state.marcador_global = { equipoA: 0, equipoB: 0 };
+    if (!this.state.aciertos_round) this.state.aciertos_round = { equipoA: 0, equipoB: 0 };
+
+    if (this.state.round_activo) {
+      this.state.versionId = `version${this.state.round_activo}`;
+    } else if (this.state.versionId) {
+      const match = this.state.versionId.match(/\d+/);
+      if (match) this.state.round_activo = parseInt(match[0]);
+    }
+
+    this.state.caidas = {
+      tecnica: this.state.marcador_global.equipoA || 0,
+      ruda: this.state.marcador_global.equipoB || 0
+    };
+    this.state.scores = {
+      tecnica: this.state.aciertos_round.equipoA || 0,
+      ruda: this.state.aciertos_round.equipoB || 0
+    };
+
     if (doSync) {
       this.saveAndSyncState(actionEvent);
     } else {
-      this.notifyListeners(actionEvent);
+      this.notifyListeners(typeof actionEvent === 'string' ? { type: actionEvent, action: actionEvent } : actionEvent);
     }
   }
 
@@ -168,12 +263,28 @@ class TriviaApp {
     this.listeners.forEach(cb => cb(this.state, actionEvent));
   }
 
+  setRound(roundNum) {
+    if (roundNum >= 1 && roundNum <= 3) {
+      this.state.round_activo = roundNum;
+      this.state.versionId = `version${roundNum}`;
+      this.state.questionIndex = 0;
+      this.state.isAnswerRevealed = false;
+      this.state.isQuestionVisible = true;
+      this.saveAndSyncState({ type: "SET_ROUND", action: "ACTUALIZAR_MARCADOR", round_activo: roundNum });
+    }
+  }
+
   setVersion(versionId) {
-    this.state.versionId = versionId;
-    this.state.questionIndex = 0;
-    this.state.isAnswerRevealed = false;
-    this.state.isQuestionVisible = true;
-    this.saveAndSyncState({ type: "SET_VERSION", versionId });
+    const match = versionId.match(/\d+/);
+    if (match) {
+      this.setRound(parseInt(match[0]));
+    } else {
+      this.state.versionId = versionId;
+      this.state.questionIndex = 0;
+      this.state.isAnswerRevealed = false;
+      this.state.isQuestionVisible = true;
+      this.saveAndSyncState({ type: "SET_VERSION", action: "ACTUALIZAR_MARCADOR", versionId });
+    }
   }
 
   setQuestionIndex(index) {
@@ -182,50 +293,115 @@ class TriviaApp {
       this.state.questionIndex = index;
       this.state.isAnswerRevealed = false;
       this.state.isQuestionVisible = true;
-      this.saveAndSyncState({ type: "CHANGE_QUESTION", index });
+      this.saveAndSyncState({ type: "CHANGE_QUESTION", action: "ACTUALIZAR_MARCADOR", index });
     }
   }
 
   toggleQuestionVisible(visible = null) {
     this.state.isQuestionVisible = visible !== null ? visible : !this.state.isQuestionVisible;
-    this.saveAndSyncState({ type: "TOGGLE_QUESTION", visible: this.state.isQuestionVisible });
+    this.saveAndSyncState({ type: "TOGGLE_QUESTION", action: "ACTUALIZAR_MARCADOR", visible: this.state.isQuestionVisible });
   }
 
   toggleAnswerReveal(revealed = null) {
     this.state.isAnswerRevealed = revealed !== null ? revealed : !this.state.isAnswerRevealed;
     if (this.state.isAnswerRevealed) {
-      this.playVictorySound();
+      this.playBellSound();
     }
-    this.saveAndSyncState({ type: "TOGGLE_ANSWER", revealed: this.state.isAnswerRevealed });
+    this.saveAndSyncState({ type: "TOGGLE_ANSWER", action: "ACTUALIZAR_MARCADOR", revealed: this.state.isAnswerRevealed });
+  }
+
+  addAcierto(team, amount = 1) {
+    this.addPoint(team, amount);
   }
 
   addPoint(team, amount = 1) {
-    if (this.state.scores[team] !== undefined) {
-      this.state.scores[team] += amount;
-      
-      // Cada 3 puntos son un round ganado
-      if (this.state.scores[team] >= 3 && this.state.scores[team] % 3 === 0) {
-        this.state.caidas[team] += 1;
-      }
+    const key = (team === 'tecnica' || team === 'equipoA') ? 'equipoA' : 'equipoB';
+    const teamDisplayName = key === 'equipoA' ? 'Esquina Técnica' : 'Esquina Ruda';
 
+    // 1. Incrementar los aciertos del round actual
+    this.state.aciertos_round[key] = (this.state.aciertos_round[key] || 0) + amount;
+    this.state.scores[key === 'equipoA' ? 'tecnica' : 'ruda'] = this.state.aciertos_round[key];
+
+    const currentGoal = ROUND_GOALS[this.state.round_activo] || 5;
+
+    // 2. Evaluación de Meta del Round
+    if (this.state.aciertos_round[key] >= currentGoal) {
+      // Se le otorga 1 Punto de Round automáticamente en el Marcador Global
+      this.state.marcador_global[key] = (this.state.marcador_global[key] || 0) + 1;
+      this.state.caidas[key === 'equipoA' ? 'tecnica' : 'ruda'] = this.state.marcador_global[key];
+
+      // Condición de Victoria Global: Primer equipo en alcanzar 2 Rounds ganados
+      if (this.state.marcador_global[key] >= 2) {
+        this.playBellSound();
+        this.triggerConfetti();
+
+        const evt = {
+          type: "VICTORIA_GLOBAL",
+          action: "VICTORIA_GLOBAL",
+          team: key,
+          teamName: teamDisplayName,
+          round: this.state.round_activo
+        };
+        this.saveAndSyncState(evt);
+      } else {
+        // Se activa el evento "ROUND GANADO" con el sonido de campana de boxeo
+        this.playBellSound();
+        this.triggerConfetti();
+
+        const roundGanadoNum = this.state.round_activo;
+        const siguienteRoundNum = Math.min(3, roundGanadoNum + 1);
+
+        const evt = {
+          type: "ROUND_GANADO",
+          action: "ROUND_GANADO",
+          team: key,
+          teamName: teamDisplayName,
+          roundGanado: roundGanadoNum,
+          siguienteRound: siguienteRoundNum
+        };
+
+        // Avanza automáticamente al siguiente Round y reinicia contadores de aciertos parciales a 0
+        this.state.round_activo = siguienteRoundNum;
+        this.state.versionId = `version${siguienteRoundNum}`;
+        this.state.questionIndex = 0;
+        this.state.isAnswerRevealed = false;
+        this.state.isQuestionVisible = true;
+        this.state.aciertos_round = { equipoA: 0, equipoB: 0 };
+        this.state.scores = { tecnica: 0, ruda: 0 };
+
+        this.saveAndSyncState(evt);
+      }
+    } else {
+      // Acierto individual en progreso
       this.playPointSound();
-      this.saveAndSyncState({ type: "ADD_POINT", team, amount });
+      const evt = {
+        type: "ADD_POINT",
+        action: "ACTUALIZAR_MARCADOR",
+        team: key,
+        teamName: teamDisplayName,
+        amount
+      };
+      this.saveAndSyncState(evt);
     }
   }
 
   triggerIncorrect() {
     this.playBuzzerSound();
-    this.saveAndSyncState({ type: "TRIGGER_INCORRECT" });
+    this.saveAndSyncState({ type: "TRIGGER_INCORRECT", action: "ACTUALIZAR_MARCADOR" });
   }
 
   ringBell() {
     this.playBellSound();
-    this.saveAndSyncState({ type: "RING_BELL" });
+    this.saveAndSyncState({ type: "RING_BELL", action: "ACTUALIZAR_MARCADOR" });
   }
 
   resetAll(pinCode) {
     if (pinCode !== "1234") return false;
     
+    this.state.round_activo = 1;
+    this.state.versionId = "version1";
+    this.state.marcador_global = { equipoA: 0, equipoB: 0 };
+    this.state.aciertos_round = { equipoA: 0, equipoB: 0 };
     this.state.scores = { tecnica: 0, ruda: 0 };
     this.state.caidas = { tecnica: 0, ruda: 0 };
     this.state.questionIndex = 0;
@@ -233,7 +409,7 @@ class TriviaApp {
     this.state.isQuestionVisible = true;
     
     this.playBellSound();
-    this.saveAndSyncState({ type: "RESET_ALL" });
+    this.saveAndSyncState({ type: "RESET_ALL", action: "ACTUALIZAR_MARCADOR" });
     return true;
   }
 
@@ -268,41 +444,15 @@ class TriviaApp {
         this.bellAudio.currentTime = 0;
         const promise = this.bellAudio.play();
         if (promise !== undefined) {
-          promise.catch(() => this.playSynthBellFallback());
+          promise.catch((err) => {
+            console.warn("Audio play error:", err);
+          });
         }
         return;
       } catch (e) {
-        console.warn("Audio play error, using synth fallback:", e);
+        console.warn("Audio play error:", e);
       }
     }
-
-    this.playSynthBellFallback();
-  }
-
-  playSynthBellFallback() {
-    if (!this.audioCtx) return;
-
-    const playStrike = (timeOffset) => {
-      const osc = this.audioCtx.createOscillator();
-      const gain = this.audioCtx.createGain();
-
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(1200, this.audioCtx.currentTime + timeOffset);
-      osc.frequency.exponentialRampToValueAtTime(800, this.audioCtx.currentTime + timeOffset + 0.8);
-
-      gain.gain.setValueAtTime(0.8, this.audioCtx.currentTime + timeOffset);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + timeOffset + 0.8);
-
-      osc.connect(gain);
-      gain.connect(this.audioCtx.destination);
-
-      osc.start(this.audioCtx.currentTime + timeOffset);
-      osc.stop(this.audioCtx.currentTime + timeOffset + 0.85);
-    };
-
-    playStrike(0);
-    playStrike(0.25);
-    playStrike(0.5);
   }
 
   playPointSound() {
@@ -353,33 +503,7 @@ class TriviaApp {
   }
 
   playVictorySound() {
-    this.initAudio();
-    if (!this.audioCtx) return;
-
-    const now = this.audioCtx.currentTime;
-    const fanfare = [
-      { f: 440.00, t: 0, d: 0.15 },
-      { f: 554.37, t: 0.15, d: 0.15 },
-      { f: 659.25, t: 0.30, d: 0.15 },
-      { f: 880.00, t: 0.45, d: 0.60 }
-    ];
-
-    fanfare.forEach(item => {
-      const osc = this.audioCtx.createOscillator();
-      const gain = this.audioCtx.createGain();
-
-      osc.type = "square";
-      osc.frequency.setValueAtTime(item.f, now + item.t);
-
-      gain.gain.setValueAtTime(0.3, now + item.t);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + item.t + item.d);
-
-      osc.connect(gain);
-      gain.connect(this.audioCtx.destination);
-
-      osc.start(now + item.t);
-      osc.stop(now + item.t + item.d + 0.05);
-    });
+    this.playBellSound();
   }
 
   triggerConfetti(containerId = "confettiCanvas") {

@@ -34,39 +34,53 @@
   <header class="w-full max-w-7xl mx-auto flex items-center justify-between gap-4 pb-4 border-b border-amber-500/30 relative z-10">
     
     <!-- Esquina Técnica Corner Badge -->
-    <div class="flex items-center gap-4 bg-slate-900/90 border-2 border-sky-500/60 rounded-2xl px-5 py-3 shadow-lg shadow-sky-500/20 backdrop-blur-md">
-      <div class="w-12 h-12 rounded-xl bg-sky-600 flex items-center justify-center font-lucha text-2xl text-white shadow-md">
+    <div class="flex items-center gap-4 bg-slate-900/90 border-2 border-sky-500/60 rounded-2xl px-5 py-3 shadow-lg shadow-sky-500/20 backdrop-blur-md min-w-[280px]">
+      <div class="w-14 h-14 rounded-xl bg-sky-600 flex items-center justify-center font-lucha text-3xl text-white shadow-md flex-shrink-0">
         🤼‍♂️
       </div>
-      <div>
+      <div class="flex-1">
         <span class="text-xs font-black uppercase text-sky-400 tracking-wider block">Esquina Técnica</span>
-        <div class="flex items-center gap-3">
-          <span class="text-3xl font-extrabold text-white" id="scoreTecnica">0</span>
-          <span class="text-xs font-bold text-sky-300 bg-sky-950 px-2 py-0.5 rounded-md border border-sky-500/40" id="caidasTecnica">0 Rounds</span>
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="text-xs font-bold text-sky-200 bg-sky-950 px-2 py-0.5 rounded border border-sky-500/40" id="caidasTecnica">0 Rounds</span>
+        </div>
+        <!-- Círculos de Progreso Aciertos -->
+        <div class="flex items-center gap-1.5" id="dotsTecnica">
+          <!-- Dinámico via JS -->
         </div>
       </div>
     </div>
 
-    <!-- Center CONSAR Emblem -->
+    <!-- Center CONSAR Emblem & Marcador Global de Rounds -->
     <div class="flex flex-col items-center text-center">
-      <div class="flex items-center gap-2">
-        <span class="text-amber-400 font-bold text-xs tracking-widest uppercase">Educación Financiera</span>
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-amber-400 font-bold text-xs tracking-widest uppercase">Educación Financiera CONSAR</span>
       </div>
-      <h1 class="text-2xl md:text-4xl font-lucha tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 drop-shadow">
-        GRAN COMBATE CONSAR
-      </h1>
+      
+      <!-- Marcador Global Principal (Rounds Ganados) -->
+      <div class="bg-slate-950/90 border-2 border-amber-500/60 px-6 py-2 rounded-2xl shadow-xl shadow-amber-500/10 flex items-center gap-4">
+        <span class="text-xs font-black uppercase text-amber-400 tracking-widest hidden sm:inline">ROUNDS:</span>
+        <span class="text-4xl md:text-5xl font-extrabold text-amber-300 font-mono tracking-wider" id="scoreGlobalText">0 - 0</span>
+      </div>
+
+      <!-- Badge de Round Activo y Meta -->
+      <span class="mt-2 text-xs md:text-sm font-extrabold px-4 py-1 bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-950 rounded-full shadow-md uppercase tracking-wider" id="roundGoalBadge">
+        ROUND 1 • Meta: 5 aciertos
+      </span>
     </div>
 
     <!-- Esquina Ruda Corner Badge -->
-    <div class="flex items-center gap-4 bg-slate-900/90 border-2 border-rose-500/60 rounded-2xl px-5 py-3 shadow-lg shadow-rose-500/20 backdrop-blur-md">
-      <div class="text-right">
+    <div class="flex items-center gap-4 bg-slate-900/90 border-2 border-rose-500/60 rounded-2xl px-5 py-3 shadow-lg shadow-rose-500/20 backdrop-blur-md min-w-[280px]">
+      <div class="text-right flex-1">
         <span class="text-xs font-black uppercase text-rose-400 tracking-wider block">Esquina Ruda</span>
-        <div class="flex items-center gap-3 justify-end">
-          <span class="text-xs font-bold text-rose-300 bg-rose-950 px-2 py-0.5 rounded-md border border-rose-500/40" id="caidasRuda">0 Rounds</span>
-          <span class="text-3xl font-extrabold text-white" id="scoreRuda">0</span>
+        <div class="flex items-center gap-2 justify-end mb-1.5">
+          <span class="text-xs font-bold text-rose-200 bg-rose-950 px-2 py-0.5 rounded border border-rose-500/40" id="caidasRuda">0 Rounds</span>
+        </div>
+        <!-- Círculos de Progreso Aciertos -->
+        <div class="flex items-center gap-1.5 justify-end" id="dotsRuda">
+          <!-- Dinámico via JS -->
         </div>
       </div>
-      <div class="w-12 h-12 rounded-xl bg-rose-600 flex items-center justify-center font-lucha text-2xl text-white shadow-md">
+      <div class="w-14 h-14 rounded-xl bg-rose-600 flex items-center justify-center font-lucha text-3xl text-white shadow-md flex-shrink-0">
         🤼‍♀️
       </div>
     </div>
@@ -125,7 +139,7 @@
         💥
       </div>
       <h3 class="text-4xl md:text-6xl font-lucha tracking-wider text-amber-400 mb-2 drop-shadow-lg" id="overlayTitle">
-        ¡PUNTO OTORGADO!
+        ¡ACIERTO SUMADO!
       </h3>
       <p class="text-2xl font-black text-white" id="overlaySubtitle">
         Esquina Técnica
@@ -133,7 +147,43 @@
     </div>
   </div>
 
-  <!-- OVERLAY: Incorrect Answer Animation (Versión 3 & General) -->
+  <!-- OVERLAY: Round Ganado Animation (Sonido de Campana) -->
+  <div id="roundGanadoOverlay" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center z-50 p-4">
+    <div class="bg-gradient-to-br from-amber-950 via-slate-900 to-amber-950 rounded-3xl p-10 max-w-2xl w-full text-center border-4 border-amber-400 animate-score-burst shadow-2xl">
+      <div class="text-8xl mb-4 animate-bounce">
+        🔔
+      </div>
+      <h3 class="text-5xl md:text-7xl font-lucha tracking-wider text-amber-400 mb-2 drop-shadow-lg">
+        ¡ROUND GANADO!
+      </h3>
+      <p class="text-2xl md:text-3xl font-black text-white mb-4" id="roundWinnerTeam">
+        Esquina Técnica
+      </p>
+      <span class="inline-block px-6 py-2 bg-amber-500 text-slate-950 font-black rounded-full text-base tracking-wider uppercase shadow-lg">
+        ¡Suma 1 Punto de Round en el Marcador Global!
+      </span>
+    </div>
+  </div>
+
+  <!-- OVERLAY: Victoria Global Animation -->
+  <div id="victoriaGlobalOverlay" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md hidden items-center justify-center z-50 p-4">
+    <div class="bg-gradient-to-br from-yellow-950 via-slate-900 to-amber-950 rounded-3xl p-12 max-w-2xl w-full text-center border-4 border-yellow-400 animate-score-burst shadow-2xl">
+      <div class="text-8xl mb-4 animate-pulse">
+        👑
+      </div>
+      <h3 class="text-5xl md:text-7xl font-lucha tracking-wider text-yellow-400 mb-2 drop-shadow-lg">
+        ¡CAMPEÓN DE LA TRIVIA!
+      </h3>
+      <p class="text-3xl md:text-4xl font-black text-white mb-6" id="victoriaWinnerTeam">
+        Esquina Técnica
+      </p>
+      <p class="text-xl font-bold text-amber-200">
+        ¡Ha alcanzado 2 Rounds ganados y se corona en el Gran Combate CONSAR!
+      </p>
+    </div>
+  </div>
+
+  <!-- OVERLAY: Incorrect Answer Animation -->
   <div id="incorrectOverlay" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center z-50 p-4">
     <div class="bg-gradient-to-br from-rose-950 via-slate-900 to-rose-950 rounded-3xl p-8 max-w-xl w-full text-center border-4 border-rose-500 animate-score-burst shadow-2xl">
       <div class="text-7xl mb-4 animate-pulse">
@@ -152,8 +202,10 @@
   <script src="questions.js"></script>
   <script src="app.js"></script>
   <script>
+    const GOALS = { 1: 5, 2: 6, 3: 4 };
     let lastState = null;
-    let prevScores = { tecnica: 0, ruda: 0 };
+    let prevAciertos = { equipoA: 0, equipoB: 0 };
+    let prevRounds = { equipoA: 0, equipoB: 0 };
 
     window.addEventListener('DOMContentLoaded', () => {
       // Audio Context Unlock on User Interaction
@@ -167,48 +219,69 @@
     });
 
     function handleStateUpdate(state, actionEvent) {
-      const currentVersion = TRIVIA_QUESTIONS[state.versionId];
-      const currentQuestion = currentVersion.questions[state.questionIndex];
+      const currentVersion = TRIVIA_QUESTIONS[state.versionId] || TRIVIA_QUESTIONS.version1;
+      const currentQuestion = currentVersion.questions[state.questionIndex || 0];
 
-      // Update Scores & Check for Point Overlay Trigger
-      if (lastState) {
-        if (state.scores.tecnica > prevScores.tecnica) {
+      const roundActivo = state.round_activo || 1;
+      const currentGoal = GOALS[roundActivo] || 5;
+
+      const equipoA_Aciertos = state.aciertos_round ? (state.aciertos_round.equipoA || 0) : (state.scores?.tecnica || 0);
+      const equipoB_Aciertos = state.aciertos_round ? (state.aciertos_round.equipoB || 0) : (state.scores?.ruda || 0);
+
+      const equipoA_Rounds = state.marcador_global ? (state.marcador_global.equipoA || 0) : (state.caidas?.tecnica || 0);
+      const equipoB_Rounds = state.marcador_global ? (state.marcador_global.equipoB || 0) : (state.caidas?.ruda || 0);
+
+      // Render Marcador Global (Puntos Mayores)
+      document.getElementById('scoreGlobalText').innerText = `${equipoA_Rounds} - ${equipoB_Rounds}`;
+      document.getElementById('caidasTecnica').innerText = `${equipoA_Rounds} Round${equipoA_Rounds !== 1 ? 's' : ''}`;
+      document.getElementById('caidasRuda').innerText = `${equipoB_Rounds} Round${equipoB_Rounds !== 1 ? 's' : ''}`;
+      document.getElementById('roundGoalBadge').innerText = `ROUND ${roundActivo} • Meta: ${currentGoal} aciertos`;
+
+      // Render Progreso Aciertos (Círculos)
+      renderProgressDots('dotsTecnica', equipoA_Aciertos, currentGoal, 'tecnica');
+      renderProgressDots('dotsRuda', equipoB_Aciertos, currentGoal, 'ruda');
+
+      // Acciones y Animaciones
+      if (actionEvent) {
+        const type = actionEvent.type || actionEvent.action;
+        if (type === "VICTORIA_GLOBAL") {
+          triggerVictoriaGlobalOverlay(actionEvent.teamName || (actionEvent.team === 'equipoA' ? 'Esquina Técnica' : 'Esquina Ruda'));
+          triviaApp.playBellSound();
+        } else if (type === "ROUND_GANADO") {
+          triggerRoundGanadoOverlay(actionEvent.teamName || (actionEvent.team === 'equipoA' ? 'Esquina Técnica' : 'Esquina Ruda'));
+          triviaApp.playBellSound();
+        } else if (type === "TRIGGER_INCORRECT") {
+          triggerIncorrectOverlay();
+          triviaApp.playBuzzerSound();
+        } else if (type === "RING_BELL" || (type === "TOGGLE_ANSWER" && actionEvent.revealed)) {
+          triviaApp.playBellSound();
+        }
+      }
+
+      // Disparador visual de punto individual
+      if (lastState && (!actionEvent || actionEvent.type === "ADD_POINT" || actionEvent.action === "ACTUALIZAR_MARCADOR")) {
+        if (equipoA_Aciertos > prevAciertos.equipoA && equipoA_Rounds === prevRounds.equipoA) {
           triggerPointOverlay("Esquina Técnica", "🔵");
           triviaApp.triggerConfetti();
-        } else if (state.scores.ruda > prevScores.ruda) {
+        } else if (equipoB_Aciertos > prevAciertos.equipoB && equipoB_Rounds === prevRounds.equipoB) {
           triggerPointOverlay("Esquina Ruda", "🔴");
           triviaApp.triggerConfetti();
         }
       }
 
-      // Check for Action Events (Sounds & Visual Animations on Pantalla Gigante)
-      if (actionEvent) {
-        if (actionEvent.type === "TRIGGER_INCORRECT") {
-          triggerIncorrectOverlay();
-          triviaApp.playBuzzerSound();
-        } else if (actionEvent.type === "RING_BELL" || (actionEvent.type === "TOGGLE_ANSWER" && actionEvent.revealed)) {
-          triviaApp.playBellSound();
-        }
-      }
-
-      prevScores = { ...state.scores };
-      lastState = { ...state };
-
-      // Ropes Shake Animation on Action Event
-      if (actionEvent && (actionEvent.type === "ADD_POINT" || actionEvent.type === "RING_BELL" || actionEvent.type === "TRIGGER_INCORRECT" || actionEvent.type === "TOGGLE_ANSWER")) {
+      // Vibración de cuerdas al cambiar estado de acción
+      if (actionEvent && (actionEvent.type === "ADD_POINT" || actionEvent.type === "ROUND_GANADO" || actionEvent.type === "RING_BELL" || actionEvent.type === "TRIGGER_INCORRECT" || actionEvent.type === "TOGGLE_ANSWER")) {
         document.getElementById('screenBody').classList.add('animate-ring-shake');
         setTimeout(() => {
           document.getElementById('screenBody').classList.remove('animate-ring-shake');
         }, 600);
       }
 
-      // Render Scores & Rounds
-      document.getElementById('scoreTecnica').innerText = state.scores.tecnica;
-      document.getElementById('scoreRuda').innerText = state.scores.ruda;
-      document.getElementById('caidasTecnica').innerText = `${state.caidas.tecnica} Round${state.caidas.tecnica !== 1 ? 's' : ''}`;
-      document.getElementById('caidasRuda').innerText = `${state.caidas.ruda} Round${state.caidas.ruda !== 1 ? 's' : ''}`;
+      prevAciertos = { equipoA: equipoA_Aciertos, equipoB: equipoB_Aciertos };
+      prevRounds = { equipoA: equipoA_Rounds, equipoB: equipoB_Rounds };
+      lastState = { ...state };
 
-      // Check if Question is Visible / Active
+      // Render Tarjeta de Pregunta
       const optionsGrid = document.getElementById('optionsGrid');
       const expBanner = document.getElementById('explanationBanner');
       const card = document.getElementById('questionDisplayCard');
@@ -231,17 +304,15 @@
         return;
       }
 
-      // STATE: Active Question
+      // STATE: Pregunta Activa
       const teamSubTitle = currentQuestion.teamSet ? ` • ${currentQuestion.teamSet}` : '';
       document.getElementById('versionTitle').innerHTML = `<span>🏆</span> ${currentVersion.name}${teamSubTitle}`;
-      document.getElementById('questionBadge').innerText = `PREGUNTA ${state.questionIndex + 1} / ${currentVersion.questions.length}`;
+      document.getElementById('questionBadge').innerText = `PREGUNTA ${(state.questionIndex || 0) + 1} / ${currentVersion.questions.length}`;
       document.getElementById('questionText').innerText = currentQuestion.question;
 
-      // Render Options according to Game Mode
       optionsGrid.innerHTML = '';
 
       if (currentVersion.mode === "open") {
-        // MODE 3: Respuesta Abierta
         optionsGrid.className = "grid grid-cols-1 gap-5";
         const openCard = document.createElement('div');
 
@@ -266,9 +337,7 @@
         optionsGrid.appendChild(openCard);
 
       } else {
-        // MODE 1 & 2: Multiple Choice or True/False
         optionsGrid.className = "grid grid-cols-1 md:grid-cols-2 gap-5";
-
         const letters = ['A', 'B', 'C', 'D'];
         currentQuestion.options.forEach((optText, idx) => {
           const isCorrect = idx === currentQuestion.correct;
@@ -309,7 +378,6 @@
         });
       }
 
-      // Explanation Banner
       if (state.isAnswerRevealed) {
         document.getElementById('explanationText').innerText = currentQuestion.explanation;
         expBanner.classList.remove('hidden');
@@ -318,11 +386,22 @@
       }
     }
 
+    function renderProgressDots(containerId, count, goal, teamClass) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = '';
+      for (let i = 0; i < goal; i++) {
+        const dot = document.createElement('span');
+        dot.className = `progress-dot ${i < count ? `progress-dot-${teamClass}-active` : ''}`;
+        container.appendChild(dot);
+      }
+    }
+
     function triggerPointOverlay(teamName, icon) {
       const overlay = document.getElementById('pointOverlay');
       document.getElementById('overlayIcon').innerText = icon;
-      document.getElementById('overlayTitle').innerText = "¡PUNTO DE LUCHA!";
-      document.getElementById('overlaySubtitle').innerText = `Punto otorgado a la ${teamName}`;
+      document.getElementById('overlayTitle').innerText = "¡ACIERTO SUMADO!";
+      document.getElementById('overlaySubtitle').innerText = `${teamName}`;
       
       overlay.classList.remove('hidden');
       overlay.classList.add('flex');
@@ -330,7 +409,33 @@
       setTimeout(() => {
         overlay.classList.add('hidden');
         overlay.classList.remove('flex');
-      }, 1800);
+      }, 1600);
+    }
+
+    function triggerRoundGanadoOverlay(teamName) {
+      const overlay = document.getElementById('roundGanadoOverlay');
+      document.getElementById('roundWinnerTeam').innerText = teamName;
+
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+
+      setTimeout(() => {
+        overlay.classList.add('hidden');
+        overlay.classList.remove('flex');
+      }, 3500);
+    }
+
+    function triggerVictoriaGlobalOverlay(teamName) {
+      const overlay = document.getElementById('victoriaGlobalOverlay');
+      document.getElementById('victoriaWinnerTeam').innerText = teamName;
+
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+
+      setTimeout(() => {
+        overlay.classList.add('hidden');
+        overlay.classList.remove('flex');
+      }, 5000);
     }
 
     function triggerIncorrectOverlay() {
