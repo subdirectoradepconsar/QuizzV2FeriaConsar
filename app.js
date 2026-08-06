@@ -451,6 +451,13 @@ class TriviaApp {
 
     if (this.bellAudio) {
       try {
+        // Debounce de 800ms para evitar reproducciones duplicadas o empalmadas
+        const now = Date.now();
+        if (this._lastBellTime && (now - this._lastBellTime < 800)) {
+          return;
+        }
+        this._lastBellTime = now;
+
         this.bellAudio.currentTime = 0;
         const promise = this.bellAudio.play();
         if (promise !== undefined) {
@@ -467,9 +474,6 @@ class TriviaApp {
 
   playMultipleBellStrikes() {
     this.playBellSound();
-    setTimeout(() => this.playBellSound(), 350);
-    setTimeout(() => this.playBellSound(), 700);
-    setTimeout(() => this.playBellSound(), 1050);
   }
 
   playPointSound() {
