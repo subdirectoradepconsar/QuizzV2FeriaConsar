@@ -303,16 +303,16 @@
         👑
       </div>
       <h3 class="text-3xl font-black text-yellow-400 mb-2">¡Pelea Finalizada!</h3>
-      <p class="text-xl text-white mb-6 font-bold">
+      <p class="text-xl text-white mb-4 font-bold">
         Ganador: <span class="text-amber-300 font-extrabold text-2xl uppercase" id="modVictoryWinnerName">Esquina Técnica</span>
       </p>
       
       <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs text-slate-400 mb-6 leading-relaxed">
-        🔒 Los controles de preguntas y marcador están bloqueados para evitar emisiones accidentales. Para iniciar un nuevo combate y regresar al panel, presiona el botón a continuación.
+        🏆 ¡La pelea ha concluido con éxito! Presiona el botón para volver al panel del moderador sin borrar ni perder los puntos.
       </div>
 
-      <button onclick="resetMatchDirectly()" class="w-full min-h-[56px] py-4 bg-gradient-to-r from-amber-500 to-yellow-600 hover:brightness-110 text-slate-950 font-black rounded-2xl text-base shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all">
-        <span>⚡ Reiniciar Nueva Pelea / Regresar al Panel</span>
+      <button onclick="dismissVictoryModal()" class="w-full min-h-[54px] py-3.5 bg-gradient-to-r from-amber-500 to-yellow-600 hover:brightness-110 text-slate-950 font-extrabold rounded-2xl text-base shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all">
+        <span>📋 Volver al Panel del Moderador</span>
       </button>
     </div>
   </div>
@@ -323,6 +323,7 @@
   <script>
     const GOALS = { 1: 5, 2: 6, 3: 4 };
     let currentState = null;
+    let victoryModalDismissed = false;
 
     window.addEventListener('DOMContentLoaded', () => {
       triviaApp.subscribe((state) => {
@@ -350,7 +351,11 @@
       const isGameOver = currentState && currentState.juego_terminado === true;
       const modVictoryModal = document.getElementById('moderatorVictoryModal');
 
-      if (isGameOver) {
+      if (!isGameOver) {
+        victoryModalDismissed = false;
+      }
+
+      if (isGameOver && !victoryModalDismissed) {
         const winner = currentState.equipoGanador || (equipoA_Rounds >= 2 ? 'Esquina Técnica' : 'Esquina Ruda');
         document.getElementById('modVictoryWinnerName').innerText = winner;
         if (modVictoryModal) {
@@ -547,6 +552,15 @@
     function closeResetModal() {
       document.getElementById('resetModal').classList.add('hidden');
       document.getElementById('resetModal').classList.remove('flex');
+    }
+
+    function dismissVictoryModal() {
+      victoryModalDismissed = true;
+      const modVictoryModal = document.getElementById('moderatorVictoryModal');
+      if (modVictoryModal) {
+        modVictoryModal.classList.add('hidden');
+        modVictoryModal.classList.remove('flex');
+      }
     }
 
     function resetMatchDirectly() {
