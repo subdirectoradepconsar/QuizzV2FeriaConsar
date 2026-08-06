@@ -308,11 +308,11 @@
       </p>
       
       <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs text-slate-400 mb-6 leading-relaxed">
-        🔒 Los controles de preguntas y marcador están bloqueados para evitar emisiones accidentales. Para iniciar un nuevo combate, confirma el reinicio a continuación.
+        🔒 Los controles de preguntas y marcador están bloqueados para evitar emisiones accidentales. Para iniciar un nuevo combate y regresar al panel, presiona el botón a continuación.
       </div>
 
-      <button onclick="openResetModal()" class="w-full min-h-[56px] py-4 bg-gradient-to-r from-amber-500 to-yellow-600 hover:brightness-110 text-slate-950 font-black rounded-2xl text-base shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all">
-        <span>⚡ Reiniciar Nueva Pelea / Juego</span>
+      <button onclick="resetMatchDirectly()" class="w-full min-h-[56px] py-4 bg-gradient-to-r from-amber-500 to-yellow-600 hover:brightness-110 text-slate-950 font-black rounded-2xl text-base shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all">
+        <span>⚡ Reiniciar Nueva Pelea / Regresar al Panel</span>
       </button>
     </div>
   </div>
@@ -347,7 +347,7 @@
       const equipoB_Rounds = currentState.marcador_global ? (currentState.marcador_global.equipoB || 0) : (currentState.caidas?.ruda || 0);
 
       // Evaluación Fin de Pelea (Victoria Global)
-      const isGameOver = currentState.juego_terminado || equipoA_Rounds >= 2 || equipoB_Rounds >= 2;
+      const isGameOver = currentState && currentState.juego_terminado === true;
       const modVictoryModal = document.getElementById('moderatorVictoryModal');
 
       if (isGameOver) {
@@ -547,6 +547,16 @@
     function closeResetModal() {
       document.getElementById('resetModal').classList.add('hidden');
       document.getElementById('resetModal').classList.remove('flex');
+    }
+
+    function resetMatchDirectly() {
+      triviaApp.resetAll("1234");
+      closeResetModal();
+      const modVictoryModal = document.getElementById('moderatorVictoryModal');
+      if (modVictoryModal) {
+        modVictoryModal.classList.add('hidden');
+        modVictoryModal.classList.remove('flex');
+      }
     }
 
     function confirmReset() {

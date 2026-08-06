@@ -216,10 +216,10 @@ class TriviaApp {
 
   updateStateLocal(newState, doSync = true, actionEvent = null) {
     if (newState.marcador_global) {
-      this.state.marcador_global = { ...this.state.marcador_global, ...newState.marcador_global };
+      this.state.marcador_global = { ...newState.marcador_global };
     }
     if (newState.aciertos_round) {
-      this.state.aciertos_round = { ...this.state.aciertos_round, ...newState.aciertos_round };
+      this.state.aciertos_round = { ...newState.aciertos_round };
     }
 
     // Adaptador para llaves legacy
