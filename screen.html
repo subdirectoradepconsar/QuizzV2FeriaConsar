@@ -156,6 +156,11 @@
     let prevScores = { tecnica: 0, ruda: 0 };
 
     window.addEventListener('DOMContentLoaded', () => {
+      // Audio Context Unlock on User Interaction
+      document.body.addEventListener('click', () => {
+        if (window.triviaApp) triviaApp.initAudio();
+      }, { once: true });
+
       triviaApp.subscribe((state, actionEvent) => {
         handleStateUpdate(state, actionEvent);
       });
@@ -176,16 +181,21 @@
         }
       }
 
-      // Check for Incorrect Animation Trigger
-      if (actionEvent && actionEvent.type === "TRIGGER_INCORRECT") {
-        triggerIncorrectOverlay();
+      // Check for Action Events (Sounds & Visual Animations on Pantalla Gigante)
+      if (actionEvent) {
+        if (actionEvent.type === "TRIGGER_INCORRECT") {
+          triggerIncorrectOverlay();
+          triviaApp.playBuzzerSound();
+        } else if (actionEvent.type === "RING_BELL" || (actionEvent.type === "TOGGLE_ANSWER" && actionEvent.revealed)) {
+          triviaApp.playBellSound();
+        }
       }
 
       prevScores = { ...state.scores };
       lastState = { ...state };
 
       // Ropes Shake Animation on Action Event
-      if (actionEvent && (actionEvent.type === "ADD_POINT" || actionEvent.type === "RING_BELL" || actionEvent.type === "TRIGGER_INCORRECT")) {
+      if (actionEvent && (actionEvent.type === "ADD_POINT" || actionEvent.type === "RING_BELL" || actionEvent.type === "TRIGGER_INCORRECT" || actionEvent.type === "TOGGLE_ANSWER")) {
         document.getElementById('screenBody').classList.add('animate-ring-shake');
         setTimeout(() => {
           document.getElementById('screenBody').classList.remove('animate-ring-shake');

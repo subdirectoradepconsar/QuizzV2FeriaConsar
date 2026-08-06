@@ -224,17 +224,17 @@
       <div class="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-4 font-bold text-3xl">
         ✓
       </div>
-      <h3 class="text-2xl font-black text-white mb-2">¡Respuesta Correcta Revelada!</h3>
-      <p class="text-sm text-slate-300 mb-6 font-semibold">¿A qué equipo se le asigna el punto en el marcador?</p>
+      <h3 class="text-2xl font-black text-white mb-2">¡Respuesta Correcta!</h3>
+      <p class="text-base text-amber-300 mb-6 font-bold">¿A qué equipo le asignas el punto?</p>
       
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <button onclick="assignPointToTeam('tecnica')" class="min-h-[60px] p-4 bg-sky-950 border-2 border-sky-500 rounded-2xl hover:bg-sky-900 active:scale-95 transition-all text-sky-200 font-extrabold text-base flex items-center justify-center gap-3 shadow-lg">
           <span class="text-2xl">🔵</span>
-          <span>+1 Esquina Técnica</span>
+          <span>Equipo 1 (Técnica)</span>
         </button>
         <button onclick="assignPointToTeam('ruda')" class="min-h-[60px] p-4 bg-rose-950 border-2 border-rose-500 rounded-2xl hover:bg-rose-900 active:scale-95 transition-all text-rose-200 font-extrabold text-base flex items-center justify-center gap-3 shadow-lg">
           <span class="text-2xl">🔴</span>
-          <span>+1 Esquina Ruda</span>
+          <span>Equipo 2 (Ruda)</span>
         </button>
       </div>
 
@@ -357,14 +357,16 @@
         currentQuestion.options.forEach((optText, idx) => {
           const isCorrect = idx === currentQuestion.correct;
           const optDiv = document.createElement('div');
-          optDiv.className = `min-h-[52px] p-4 rounded-xl text-sm font-semibold flex items-center justify-between border cursor-pointer active:scale-98 transition-all ${
+          optDiv.className = `min-h-[56px] p-4 rounded-xl text-sm font-semibold flex items-center justify-between border cursor-pointer active:scale-98 transition-all ${
             isCorrect 
-              ? 'bg-emerald-950/80 border-emerald-500 text-emerald-200 font-bold shadow-md shadow-emerald-950/50' 
-              : 'bg-slate-950 border-slate-800 text-slate-300'
+              ? 'bg-emerald-950/80 border-emerald-500 hover:border-emerald-400 text-emerald-200 font-bold shadow-md shadow-emerald-950/50' 
+              : 'bg-slate-950 border-slate-800 hover:border-rose-500/50 text-slate-300'
           }`;
           optDiv.innerHTML = `
-            <span class="text-base">${optText}</span>
-            ${isCorrect ? '<span class="px-2.5 py-1 bg-emerald-500 text-slate-950 text-xs font-black rounded-lg uppercase shadow-sm">Respuesta Correcta ✓</span>' : ''}
+            <div class="flex items-center gap-3">
+              <span class="text-base font-bold text-white">${optText}</span>
+            </div>
+            ${isCorrect ? '<span class="px-2.5 py-1 bg-emerald-500 text-slate-950 text-xs font-black rounded-lg uppercase shadow-sm">Respuesta Correcta ✓</span>' : '<span class="text-xs text-rose-400/70 font-semibold px-2 py-0.5 rounded bg-rose-950/40 border border-rose-800/40">Incorrecto ✕</span>'}
           `;
           optDiv.onclick = () => {
             if (isCorrect) {
@@ -435,6 +437,7 @@
 
     function revealAndPromptScore() {
       triviaApp.toggleAnswerReveal(true);
+      triviaApp.ringBell();
       openAssignPointModal();
     }
 
