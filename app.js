@@ -16,6 +16,8 @@ const DEFAULT_STATE = {
   questionIndex: 0,
   isQuestionVisible: true,
   isAnswerRevealed: false,
+  juego_terminado: false,
+  equipoGanador: null,
   marcador_global: { equipoA: 0, equipoB: 0 }, // Rounds ganados
   aciertos_round: { equipoA: 0, equipoB: 0 },  // Aciertos parciales del round activo
   // Propiedades de retrocompatibilidad
@@ -172,6 +174,8 @@ class TriviaApp {
       questionIndex: this.state.questionIndex || 0,
       isQuestionVisible: this.state.isQuestionVisible !== undefined ? this.state.isQuestionVisible : true,
       isAnswerRevealed: this.state.isAnswerRevealed !== undefined ? this.state.isAnswerRevealed : false,
+      juego_terminado: this.state.juego_terminado || false,
+      equipoGanador: this.state.equipoGanador || null,
       accion: actionStr,
       timestamp: this.state.timestamp
     };
@@ -332,13 +336,17 @@ class TriviaApp {
 
       // Condición de Victoria Global: Primer equipo en alcanzar 2 Rounds ganados
       if (this.state.marcador_global[key] >= 2) {
-        this.playBellSound();
+        this.state.juego_terminado = true;
+        this.state.equipoGanador = teamDisplayName;
+
+        this.playMultipleBellStrikes();
         this.triggerConfetti();
 
         const evt = {
           type: "VICTORIA_GLOBAL",
           action: "VICTORIA_GLOBAL",
           team: key,
+          equipoGanador: teamDisplayName,
           teamName: teamDisplayName,
           round: this.state.round_activo
         };
@@ -407,6 +415,8 @@ class TriviaApp {
     this.state.questionIndex = 0;
     this.state.isAnswerRevealed = false;
     this.state.isQuestionVisible = true;
+    this.state.juego_terminado = false;
+    this.state.equipoGanador = null;
     
     this.playBellSound();
     this.saveAndSyncState({ type: "RESET_ALL", action: "ACTUALIZAR_MARCADOR" });
@@ -453,6 +463,13 @@ class TriviaApp {
         console.warn("Audio play error:", e);
       }
     }
+  }
+
+  playMultipleBellStrikes() {
+    this.playBellSound();
+    setTimeout(() => this.playBellSound(), 350);
+    setTimeout(() => this.playBellSound(), 700);
+    setTimeout(() => this.playBellSound(), 1050);
   }
 
   playPointSound() {

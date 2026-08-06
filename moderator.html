@@ -296,6 +296,27 @@
 
 
 
+  <!-- MODAL: Victoria Global Moderador (Fin de la Pelea) -->
+  <div id="moderatorVictoryModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+    <div class="bg-gradient-to-br from-slate-900 via-amber-950/70 to-slate-900 border-2 border-yellow-400 rounded-3xl p-8 max-w-lg w-full shadow-2xl text-center animate-pop-in">
+      <div class="w-16 h-16 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-4 text-4xl">
+        👑
+      </div>
+      <h3 class="text-3xl font-black text-yellow-400 mb-2">¡Pelea Finalizada!</h3>
+      <p class="text-xl text-white mb-6 font-bold">
+        Ganador: <span class="text-amber-300 font-extrabold text-2xl uppercase" id="modVictoryWinnerName">Esquina Técnica</span>
+      </p>
+      
+      <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs text-slate-400 mb-6 leading-relaxed">
+        🔒 Los controles de preguntas y marcador están bloqueados para evitar emisiones accidentales. Para iniciar un nuevo combate, confirma el reinicio a continuación.
+      </div>
+
+      <button onclick="openResetModal()" class="w-full min-h-[56px] py-4 bg-gradient-to-r from-amber-500 to-yellow-600 hover:brightness-110 text-slate-950 font-black rounded-2xl text-base shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all">
+        <span>⚡ Reiniciar Nueva Pelea / Juego</span>
+      </button>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script src="questions.js"></script>
   <script src="app.js"></script>
@@ -325,6 +346,24 @@
       const equipoA_Rounds = currentState.marcador_global ? (currentState.marcador_global.equipoA || 0) : (currentState.caidas?.tecnica || 0);
       const equipoB_Rounds = currentState.marcador_global ? (currentState.marcador_global.equipoB || 0) : (currentState.caidas?.ruda || 0);
 
+      // Evaluación Fin de Pelea (Victoria Global)
+      const isGameOver = currentState.juego_terminado || equipoA_Rounds >= 2 || equipoB_Rounds >= 2;
+      const modVictoryModal = document.getElementById('moderatorVictoryModal');
+
+      if (isGameOver) {
+        const winner = currentState.equipoGanador || (equipoA_Rounds >= 2 ? 'Esquina Técnica' : 'Esquina Ruda');
+        document.getElementById('modVictoryWinnerName').innerText = winner;
+        if (modVictoryModal) {
+          modVictoryModal.classList.remove('hidden');
+          modVictoryModal.classList.add('flex');
+        }
+      } else {
+        if (modVictoryModal) {
+          modVictoryModal.classList.add('hidden');
+          modVictoryModal.classList.remove('flex');
+        }
+      }
+
       // Header status guide
       document.getElementById('headerGlobalScore').innerText = `Equipo A (Técnica): ${equipoA_Rounds} R | Equipo B (Ruda): ${equipoB_Rounds} R`;
       document.getElementById('headerRoundIndicator').innerText = `ROUND ${roundActivo} (Meta: ${currentGoal} aciertos)`;
@@ -338,10 +377,12 @@
         const roundNum = index + 1;
         const isSelected = roundActivo === roundNum;
         const btn = document.createElement('button');
-        btn.className = `min-h-[50px] p-3 rounded-xl text-xs font-bold text-center border transition-all active:scale-95 ${
-          isSelected 
-            ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md font-extrabold' 
-            : 'bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700'
+        btn.disabled = isGameOver;
+        btn.className = `min-h-[50px] p-3 rounded-xl text-xs font-bold text-center border transition-all ${
+          isGameOver ? 'opacity-40 cursor-not-allowed bg-slate-950 border-slate-800' :
+          (isSelected 
+            ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md font-extrabold active:scale-95' 
+            : 'bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700 active:scale-95')
         }`;
         btn.innerHTML = `
           <div class="font-extrabold text-sm mb-0.5">Round ${roundNum}</div>
@@ -383,10 +424,11 @@
         currentQuestion.options.forEach((optText, idx) => {
           const isCorrect = idx === currentQuestion.correct;
           const optDiv = document.createElement('div');
-          optDiv.className = `min-h-[56px] p-4 rounded-xl text-sm font-semibold flex items-center justify-between border cursor-pointer active:scale-98 transition-all ${
-            isCorrect 
-              ? 'bg-emerald-950/80 border-emerald-500 hover:border-emerald-400 text-emerald-200 font-bold shadow-md shadow-emerald-950/50' 
-              : 'bg-slate-950 border-slate-800 hover:border-rose-500/50 text-slate-300'
+          optDiv.className = `min-h-[56px] p-4 rounded-xl text-sm font-semibold flex items-center justify-between border cursor-pointer transition-all ${
+            isGameOver ? 'opacity-40 cursor-not-allowed bg-slate-950 border-slate-800' :
+            (isCorrect 
+              ? 'bg-emerald-950/80 border-emerald-500 hover:border-emerald-400 text-emerald-200 font-bold shadow-md shadow-emerald-950/50 active:scale-98' 
+              : 'bg-slate-950 border-slate-800 hover:border-rose-500/50 text-slate-300 active:scale-98')
           }`;
           optDiv.innerHTML = `
             <div class="flex items-center gap-3">
@@ -395,6 +437,7 @@
             ${isCorrect ? '<span class="px-2.5 py-1 bg-emerald-500 text-slate-950 text-xs font-black rounded-lg uppercase shadow-sm">Respuesta Correcta ✓</span>' : '<span class="text-xs text-rose-400/70 font-semibold px-2 py-0.5 rounded bg-rose-950/40 border border-rose-800/40">Incorrecto ✕</span>'}
           `;
           optDiv.onclick = () => {
+            if (isGameOver) return;
             if (isCorrect) {
               revealAndPromptScore();
             } else {
@@ -510,6 +553,11 @@
       const pin = document.getElementById('pinInput').value;
       if (triviaApp.resetAll(pin)) {
         closeResetModal();
+        const modVictoryModal = document.getElementById('moderatorVictoryModal');
+        if (modVictoryModal) {
+          modVictoryModal.classList.add('hidden');
+          modVictoryModal.classList.remove('flex');
+        }
       } else {
         document.getElementById('pinErrorMsg').classList.remove('hidden');
         document.getElementById('pinInput').value = '';

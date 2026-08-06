@@ -165,20 +165,29 @@
     </div>
   </div>
 
-  <!-- OVERLAY: Victoria Global Animation -->
-  <div id="victoriaGlobalOverlay" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md hidden items-center justify-center z-50 p-4">
-    <div class="bg-gradient-to-br from-yellow-950 via-slate-900 to-amber-950 rounded-3xl p-12 max-w-2xl w-full text-center border-4 border-yellow-400 animate-score-burst shadow-2xl">
-      <div class="text-8xl mb-4 animate-pulse">
-        👑
+  <!-- OVERLAY: Victoria Global Animation (Fin de la Pelea) -->
+  <div id="victoriaGlobalOverlay" class="fixed inset-0 bg-slate-950/95 backdrop-blur-xl hidden items-center justify-center z-50 p-4">
+    <div class="bg-gradient-to-br from-amber-950 via-slate-900 to-yellow-950 rounded-3xl p-10 md:p-14 max-w-3xl w-full text-center border-4 border-yellow-400 animate-score-burst shadow-2xl relative overflow-hidden">
+      <!-- Glow Decorativo -->
+      <div class="absolute -top-24 -left-24 w-56 h-56 bg-yellow-500/20 rounded-full blur-3xl"></div>
+      <div class="absolute -bottom-24 -right-24 w-56 h-56 bg-amber-500/20 rounded-full blur-3xl"></div>
+      
+      <div class="text-7xl md:text-9xl mb-4 animate-bounce">
+        🥊
       </div>
-      <h3 class="text-5xl md:text-7xl font-lucha tracking-wider text-yellow-400 mb-2 drop-shadow-lg">
-        ¡CAMPEÓN DE LA TRIVIA!
+      <h3 class="text-4xl md:text-6xl lg:text-7xl font-lucha tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 mb-3 drop-shadow-lg uppercase">
+        ¡LA PELEA HA TERMINADO!
       </h3>
-      <p class="text-3xl md:text-4xl font-black text-white mb-6" id="victoriaWinnerTeam">
-        Esquina Técnica
+      <p class="text-xl md:text-3xl font-black text-amber-200 uppercase tracking-widest mb-6">
+        EL GANADOR ES:
       </p>
-      <p class="text-xl font-bold text-amber-200">
-        ¡Ha alcanzado 2 Rounds ganados y se corona en el Gran Combate CONSAR!
+      <div class="py-4 px-8 rounded-2xl bg-slate-950/90 border-4 border-yellow-400 inline-block shadow-2xl mb-6">
+        <span class="text-4xl md:text-6xl lg:text-7xl font-black text-amber-300 drop-shadow-md tracking-tight uppercase" id="victoriaWinnerTeam">
+          ¡ESQUINA TÉCNICA!
+        </span>
+      </div>
+      <p class="text-base md:text-xl font-bold text-slate-300">
+        🏆 ¡Ha alcanzado 2 Rounds ganados y se corona en el Gran Combate CONSAR! 🏆
       </p>
     </div>
   </div>
@@ -244,17 +253,27 @@
       // Acciones y Animaciones
       if (actionEvent) {
         const type = actionEvent.type || actionEvent.action;
-        if (type === "VICTORIA_GLOBAL") {
-          triggerVictoriaGlobalOverlay(actionEvent.teamName || (actionEvent.team === 'equipoA' ? 'Esquina Técnica' : 'Esquina Ruda'));
-          triviaApp.playBellSound();
+        if (type === "VICTORIA_GLOBAL" || state.juego_terminado || equipoA_Rounds >= 2 || equipoB_Rounds >= 2) {
+          const winner = state.equipoGanador || actionEvent?.teamName || (equipoA_Rounds >= 2 ? 'Esquina Técnica' : 'Esquina Ruda');
+          triggerVictoriaGlobalOverlay(winner);
         } else if (type === "ROUND_GANADO") {
           triggerRoundGanadoOverlay(actionEvent.teamName || (actionEvent.team === 'equipoA' ? 'Esquina Técnica' : 'Esquina Ruda'));
-          triviaApp.playBellSound();
         } else if (type === "TRIGGER_INCORRECT") {
           triggerIncorrectOverlay();
           triviaApp.playBuzzerSound();
         } else if (type === "RING_BELL" || (type === "TOGGLE_ANSWER" && actionEvent.revealed)) {
           triviaApp.playBellSound();
+        }
+      }
+
+      if (state.juego_terminado || equipoA_Rounds >= 2 || equipoB_Rounds >= 2) {
+        const winner = state.equipoGanador || (equipoA_Rounds >= 2 ? 'Esquina Técnica' : 'Esquina Ruda');
+        triggerVictoriaGlobalOverlay(winner);
+      } else {
+        const overlay = document.getElementById('victoriaGlobalOverlay');
+        if (overlay && !overlay.classList.contains('hidden')) {
+          overlay.classList.add('hidden');
+          overlay.classList.remove('flex');
         }
       }
 
@@ -427,15 +446,28 @@
 
     function triggerVictoriaGlobalOverlay(teamName) {
       const overlay = document.getElementById('victoriaGlobalOverlay');
-      document.getElementById('victoriaWinnerTeam').innerText = teamName;
+      const winnerEl = document.getElementById('victoriaWinnerTeam');
+      if (winnerEl) {
+        let cleanName = teamName.toUpperCase().replace(/^¡|!$/g, '');
+        winnerEl.innerText = `¡${cleanName}!`;
+      }
 
       overlay.classList.remove('hidden');
       overlay.classList.add('flex');
 
-      setTimeout(() => {
-        overlay.classList.add('hidden');
-        overlay.classList.remove('flex');
-      }, 5000);
+      if (!window._confettiInterval) {
+        triviaApp.playMultipleBellStrikes();
+        triviaApp.triggerConfetti();
+
+        window._confettiInterval = setInterval(() => {
+          if (lastState && (lastState.juego_terminado || (lastState.marcador_global && (lastState.marcador_global.equipoA >= 2 || lastState.marcador_global.equipoB >= 2)))) {
+            triviaApp.triggerConfetti();
+          } else {
+            clearInterval(window._confettiInterval);
+            window._confettiInterval = null;
+          }
+        }, 2500);
+      }
     }
 
     function triggerIncorrectOverlay() {
