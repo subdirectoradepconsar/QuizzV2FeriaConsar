@@ -10,7 +10,33 @@ const ROUND_GOALS = {
   3: 4  // Round 3: Meta 4 aciertos (de 6 preguntas)
 };
 
+const DEFAULT_RESPUESTAS = () => ({
+  equipoA: {
+    ronda1: Array(8).fill("Incorrecta"),
+    ronda2: Array(10).fill("Incorrecta"),
+    ronda3: Array(6).fill("Incorrecta")
+  },
+  equipoB: {
+    ronda1: Array(8).fill("Incorrecta"),
+    ronda2: Array(10).fill("Incorrecta"),
+    ronda3: Array(6).fill("Incorrecta")
+  }
+});
+
+function getNextMatchId(currentId) {
+  if (!currentId || typeof currentId !== 'string') return "PART-001";
+  const match = currentId.match(/(\d+)/);
+  if (match) {
+    const num = parseInt(match[0], 10) + 1;
+    const prefix = currentId.replace(/\d+$/, '');
+    return `${prefix}${String(num).padStart(match[0].length, '0')}`;
+  }
+  return "PART-001";
+}
+
 const DEFAULT_STATE = {
+  idPartida: "PART-001",
+  webhookSentForId: null,
   round_activo: 1,
   versionId: "version1",
   questionIndex: 0,
@@ -20,6 +46,7 @@ const DEFAULT_STATE = {
   equipoGanador: null,
   marcador_global: { equipoA: 0, equipoB: 0 }, // Rounds ganados
   aciertos_round: { equipoA: 0, equipoB: 0 },  // Aciertos parciales del round activo
+  respuestas: DEFAULT_RESPUESTAS(),
   // Propiedades de retrocompatibilidad
   scores: { tecnica: 0, ruda: 0 },
   caidas: { tecnica: 0, ruda: 0 },
@@ -132,8 +159,14 @@ class TriviaApp {
         return {
           ...DEFAULT_STATE,
           ...loaded,
+          idPartida: loaded.idPartida || DEFAULT_STATE.idPartida,
+          webhookSentForId: loaded.webhookSentForId || null,
           marcador_global: { ...DEFAULT_STATE.marcador_global, ...(loaded.marcador_global || {}) },
-          aciertos_round: { ...DEFAULT_STATE.aciertos_round, ...(loaded.aciertos_round || {}) }
+          aciertos_round: { ...DEFAULT_STATE.aciertos_round, ...(loaded.aciertos_round || {}) },
+          respuestas: loaded.respuestas ? {
+            equipoA: { ...DEFAULT_RESPUESTAS().equipoA, ...(loaded.respuestas.equipoA || {}) },
+            equipoB: { ...DEFAULT_RESPUESTAS().equipoB, ...(loaded.respuestas.equipoB || {}) }
+          } : DEFAULT_RESPUESTAS()
         };
       }
     } catch (e) {
@@ -161,6 +194,8 @@ class TriviaApp {
 
     // Estructura exacta requerida para Firebase 'estado_trivia'
     const estadoTriviaData = {
+      idPartida: this.state.idPartida || "PART-001",
+      webhookSentForId: this.state.webhookSentForId || null,
       round_activo: this.state.round_activo || 1,
       marcador_global: {
         equipoA: this.state.marcador_global.equipoA || 0,
@@ -170,6 +205,7 @@ class TriviaApp {
         equipoA: this.state.aciertos_round.equipoA || 0,
         equipoB: this.state.aciertos_round.equipoB || 0
       },
+      respuestas: this.state.respuestas || DEFAULT_RESPUESTAS(),
       versionId: this.state.versionId || "version1",
       questionIndex: this.state.questionIndex || 0,
       isQuestionVisible: this.state.isQuestionVisible !== undefined ? this.state.isQuestionVisible : true,
@@ -221,6 +257,18 @@ class TriviaApp {
     if (newState.aciertos_round) {
       this.state.aciertos_round = { ...newState.aciertos_round };
     }
+    if (newState.respuestas) {
+      this.state.respuestas = {
+        equipoA: { ...DEFAULT_RESPUESTAS().equipoA, ...(newState.respuestas.equipoA || {}) },
+        equipoB: { ...DEFAULT_RESPUESTAS().equipoB, ...(newState.respuestas.equipoB || {}) }
+      };
+    }
+    if (newState.idPartida) {
+      this.state.idPartida = newState.idPartida;
+    }
+    if (newState.webhookSentForId !== undefined) {
+      this.state.webhookSentForId = newState.webhookSentForId;
+    }
 
     // Adaptador para llaves legacy
     if (newState.scores && !newState.aciertos_round) {
@@ -234,6 +282,7 @@ class TriviaApp {
 
     if (!this.state.marcador_global) this.state.marcador_global = { equipoA: 0, equipoB: 0 };
     if (!this.state.aciertos_round) this.state.aciertos_round = { equipoA: 0, equipoB: 0 };
+    if (!this.state.respuestas) this.state.respuestas = DEFAULT_RESPUESTAS();
 
     if (this.state.round_activo) {
       this.state.versionId = `version${this.state.round_activo}`;
@@ -250,6 +299,11 @@ class TriviaApp {
       tecnica: this.state.aciertos_round.equipoA || 0,
       ruda: this.state.aciertos_round.equipoB || 0
     };
+
+    // Auto-envío de Webhook si la partida acaba de finalizar y no se ha enviado aún
+    if (this.state.juego_terminado && this.state.webhookSentForId !== this.state.idPartida) {
+      this.sendWebhookPost();
+    }
 
     if (doSync) {
       this.saveAndSyncState(actionEvent);
@@ -314,13 +368,95 @@ class TriviaApp {
     this.saveAndSyncState({ type: "TOGGLE_ANSWER", action: "ACTUALIZAR_MARCADOR", revealed: this.state.isAnswerRevealed });
   }
 
+  recordQuestionResult(winnerTeamKey = null, roundNum = null, questionIdx = null) {
+    const rNum = roundNum !== null ? roundNum : (this.state.round_activo || 1);
+    const qIdx = questionIdx !== null ? questionIdx : (this.state.questionIndex || 0);
+    const roundKey = `ronda${rNum}`;
+
+    if (!this.state.respuestas) {
+      this.state.respuestas = DEFAULT_RESPUESTAS();
+    }
+
+    const isTeamAWinner = (winnerTeamKey === 'tecnica' || winnerTeamKey === 'equipoA' || winnerTeamKey === 'equipoAzul');
+    const isTeamBWinner = (winnerTeamKey === 'ruda' || winnerTeamKey === 'equipoB' || winnerTeamKey === 'equipoRojo');
+
+    if (this.state.respuestas.equipoA && this.state.respuestas.equipoA[roundKey]) {
+      if (qIdx >= 0 && qIdx < this.state.respuestas.equipoA[roundKey].length) {
+        this.state.respuestas.equipoA[roundKey][qIdx] = isTeamAWinner ? "Correcta" : "Incorrecta";
+      }
+    }
+
+    if (this.state.respuestas.equipoB && this.state.respuestas.equipoB[roundKey]) {
+      if (qIdx >= 0 && qIdx < this.state.respuestas.equipoB[roundKey].length) {
+        this.state.respuestas.equipoB[roundKey][qIdx] = isTeamBWinner ? "Correcta" : "Incorrecta";
+      }
+    }
+
+    this.saveAndSyncState({
+      type: "RECORD_QUESTION_RESULT",
+      action: "ACTUALIZAR_MARCADOR",
+      round: rNum,
+      questionIndex: qIdx,
+      winnerTeam: winnerTeamKey
+    });
+  }
+
+  setQuestionAnswer(team, roundNum, questionIdx, resultStr) {
+    const key = (team === 'tecnica' || team === 'equipoA' || team === 'equipoAzul') ? 'equipoA' : 'equipoB';
+    const roundKey = `ronda${roundNum}`;
+    const value = (resultStr === "Correcta" || resultStr === true) ? "Correcta" : "Incorrecta";
+
+    if (!this.state.respuestas) {
+      this.state.respuestas = DEFAULT_RESPUESTAS();
+    }
+
+    if (this.state.respuestas[key] && this.state.respuestas[key][roundKey]) {
+      if (questionIdx >= 0 && questionIdx < this.state.respuestas[key][roundKey].length) {
+        this.state.respuestas[key][roundKey][questionIdx] = value;
+        this.saveAndSyncState({
+          type: "SET_QUESTION_ANSWER",
+          action: "ACTUALIZAR_MARCADOR",
+          team: key,
+          round: roundNum,
+          questionIndex: questionIdx,
+          value
+        });
+      }
+    }
+  }
+
   addAcierto(team, amount = 1) {
     this.addPoint(team, amount);
   }
 
   addPoint(team, amount = 1) {
-    const key = (team === 'tecnica' || team === 'equipoA') ? 'equipoA' : 'equipoB';
+    const key = (team === 'tecnica' || team === 'equipoA' || team === 'equipoAzul') ? 'equipoA' : 'equipoB';
     const teamDisplayName = key === 'equipoA' ? 'Esquina Técnica' : 'Esquina Ruda';
+
+    // Registrar explícitamente el resultado de la pregunta actual para ambos equipos
+    const roundNum = this.state.round_activo || 1;
+    const qIdx = this.state.questionIndex || 0;
+    const roundKey = `ronda${roundNum}`;
+
+    if (!this.state.respuestas) {
+      this.state.respuestas = DEFAULT_RESPUESTAS();
+    }
+    
+    // El equipo que suma punto queda registrado como "Correcta" para esta pregunta en el índice qIdx exacto
+    if (this.state.respuestas[key] && this.state.respuestas[key][roundKey]) {
+      if (qIdx >= 0 && qIdx < this.state.respuestas[key][roundKey].length) {
+        this.state.respuestas[key][roundKey][qIdx] = "Correcta";
+      }
+    }
+    // El otro equipo queda registrado como "Incorrecta" para esta pregunta si no había obtenido acierto
+    const otherKey = key === 'equipoA' ? 'equipoB' : 'equipoA';
+    if (this.state.respuestas[otherKey] && this.state.respuestas[otherKey][roundKey]) {
+      if (qIdx >= 0 && qIdx < this.state.respuestas[otherKey][roundKey].length) {
+        if (this.state.respuestas[otherKey][roundKey][qIdx] !== "Correcta") {
+          this.state.respuestas[otherKey][roundKey][qIdx] = "Incorrecta";
+        }
+      }
+    }
 
     // 1. Incrementar los aciertos del round actual
     this.state.aciertos_round[key] = (this.state.aciertos_round[key] || 0) + amount;
@@ -351,6 +487,7 @@ class TriviaApp {
           round: this.state.round_activo
         };
         this.saveAndSyncState(evt);
+        this.sendWebhookPost();
       } else {
         // Se activa el evento "ROUND GANADO" con el sonido de campana de boxeo
         this.playBellSound();
@@ -394,6 +531,25 @@ class TriviaApp {
   }
 
   triggerIncorrect() {
+    const roundNum = this.state.round_activo || 1;
+    const qIdx = this.state.questionIndex || 0;
+    const roundKey = `ronda${roundNum}`;
+
+    if (!this.state.respuestas) {
+      this.state.respuestas = DEFAULT_RESPUESTAS();
+    }
+
+    // Registrar "Incorrecta" para la pregunta actual en el índice qIdx exacto
+    ['equipoA', 'equipoB'].forEach(k => {
+      if (this.state.respuestas[k] && this.state.respuestas[k][roundKey]) {
+        if (qIdx >= 0 && qIdx < this.state.respuestas[k][roundKey].length) {
+          if (this.state.respuestas[k][roundKey][qIdx] !== "Correcta") {
+            this.state.respuestas[k][roundKey][qIdx] = "Incorrecta";
+          }
+        }
+      }
+    });
+
     this.playBuzzerSound();
     this.saveAndSyncState({ type: "TRIGGER_INCORRECT", action: "ACTUALIZAR_MARCADOR" });
   }
@@ -403,13 +559,100 @@ class TriviaApp {
     this.saveAndSyncState({ type: "RING_BELL", action: "ACTUALIZAR_MARCADOR" });
   }
 
+  setMatchId(newId) {
+    if (newId && typeof newId === 'string') {
+      this.state.idPartida = newId;
+      this.saveAndSyncState({ type: "SET_MATCH_ID", action: "ACTUALIZAR_MARCADOR", idPartida: newId });
+    }
+  }
+
+  sendWebhookPost(force = false) {
+    if (!force && this.state.webhookSentForId === this.state.idPartida) {
+      console.log("ℹ️ Webhook ya enviado previamente para la partida:", this.state.idPartida);
+      return;
+    }
+
+    const equipoAzulResp = this.state.respuestas?.equipoA || DEFAULT_RESPUESTAS().equipoA;
+    const equipoRojoResp = this.state.respuestas?.equipoB || DEFAULT_RESPUESTAS().equipoB;
+
+    const totalAzul = (equipoAzulResp.ronda1 || []).filter(r => r === "Correcta").length +
+                      (equipoAzulResp.ronda2 || []).filter(r => r === "Correcta").length +
+                      (equipoAzulResp.ronda3 || []).filter(r => r === "Correcta").length;
+
+    const totalRojo = (equipoRojoResp.ronda1 || []).filter(r => r === "Correcta").length +
+                      (equipoRojoResp.ronda2 || []).filter(r => r === "Correcta").length +
+                      (equipoRojoResp.ronda3 || []).filter(r => r === "Correcta").length;
+
+    let ganadorName = "Equipo Azul";
+    if (this.state.equipoGanador) {
+      if (this.state.equipoGanador.includes("Ruda") || this.state.equipoGanador.includes("Rojo")) {
+        ganadorName = "Equipo Rojo";
+      } else {
+        ganadorName = "Equipo Azul";
+      }
+    } else {
+      const roundsA = this.state.marcador_global?.equipoA || 0;
+      const roundsB = this.state.marcador_global?.equipoB || 0;
+      ganadorName = roundsB > roundsA ? "Equipo Rojo" : "Equipo Azul";
+    }
+
+    const payload = {
+      idPartida: this.state.idPartida || "PART-001",
+      ganador: ganadorName,
+      equipoAzul: {
+        nombre: "Equipo Azul",
+        puntajeTotal: totalAzul,
+        respuestas: {
+          ronda1: equipoAzulResp.ronda1 || Array(8).fill("Incorrecta"),
+          ronda2: equipoAzulResp.ronda2 || Array(10).fill("Incorrecta"),
+          ronda3: equipoAzulResp.ronda3 || Array(6).fill("Incorrecta")
+        }
+      },
+      equipoRojo: {
+        nombre: "Equipo Rojo",
+        puntajeTotal: totalRojo,
+        respuestas: {
+          ronda1: equipoRojoResp.ronda1 || Array(8).fill("Incorrecta"),
+          ronda2: equipoRojoResp.ronda2 || Array(10).fill("Incorrecta"),
+          ronda3: equipoRojoResp.ronda3 || Array(6).fill("Incorrecta")
+        }
+      }
+    };
+
+    const webhookUrl = "https://script.google.com/macros/s/AKfycbyRpipxKL5MxBltQy4-P8Jeo4ppY-ESi9njaOL3CZlZFQ2DbQ-xMf1GreoqlUCKwy1n2Q/exec";
+
+    console.log("🚀 Enviando Webhook POST de Fin de Partida:", payload);
+
+    this.state.webhookSentForId = this.state.idPartida;
+    this.saveAndSyncState({ type: "WEBHOOK_SENT", action: "ACTUALIZAR_MARCADOR" });
+
+    fetch(webhookUrl, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(() => {
+      console.log("✅ Webhook POST enviado exitosamente a Google Sheets");
+    })
+    .catch((err) => {
+      console.error("❌ Error al enviar Webhook POST:", err);
+    });
+  }
+
   resetAll(pinCode) {
     if (pinCode !== "1234") return false;
     
+    const nextMatchId = getNextMatchId(this.state.idPartida);
+    this.state.idPartida = nextMatchId;
+    this.state.webhookSentForId = null;
     this.state.round_activo = 1;
     this.state.versionId = "version1";
     this.state.marcador_global = { equipoA: 0, equipoB: 0 };
     this.state.aciertos_round = { equipoA: 0, equipoB: 0 };
+    this.state.respuestas = DEFAULT_RESPUESTAS();
     this.state.scores = { tecnica: 0, ruda: 0 };
     this.state.caidas = { tecnica: 0, ruda: 0 };
     this.state.questionIndex = 0;

@@ -59,8 +59,14 @@
     </div>
   </header>
 
-  <!-- Header Guía de Estado Actual (Marcador Global, Aciertos y Round Activo) -->
+  <!-- Header Guía de Estado Actual (Marcador Global, Aciertos, Round Activo y Google Sheets Export) -->
   <div class="bg-gradient-to-r from-slate-900 via-amber-950/40 to-slate-900 border-b border-amber-500/30 px-4 py-3 text-center flex flex-wrap items-center justify-around gap-4 shadow-inner">
+    <!-- ID de Partida Activa -->
+    <div class="flex items-center gap-2 bg-slate-950/80 px-3.5 py-1.5 rounded-xl border border-slate-700">
+      <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">ID Partida:</span>
+      <span class="text-sm font-black text-amber-300 font-mono" id="headerMatchId">PART-001</span>
+    </div>
+
     <!-- Marcador Global de Rounds -->
     <div class="flex items-center gap-2 bg-slate-950/80 px-4 py-1.5 rounded-xl border border-amber-500/40">
       <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">Marcador Global:</span>
@@ -76,6 +82,16 @@
     <div class="flex items-center gap-2 bg-slate-950/80 px-4 py-1.5 rounded-xl border border-slate-700">
       <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Aciertos del Round:</span>
       <span class="text-base font-extrabold text-amber-300" id="headerAciertosText">0/5 vs 0/5</span>
+    </div>
+
+    <!-- Google Sheets Webhook Status & Manual Export Button -->
+    <div class="flex items-center gap-2">
+      <span id="headerWebhookBadge" class="text-xs font-bold px-3 py-1 rounded-xl bg-slate-900 text-slate-400 border border-slate-700">
+        📊 Sheet: Pendiente
+      </span>
+      <button onclick="triviaApp.sendWebhookPost(true)" title="Forzar envío POST a Google Sheets Webhook" class="px-2.5 py-1 bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/50 text-emerald-300 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center gap-1">
+        <span>📤 Exportar</span>
+      </button>
     </div>
   </div>
 
@@ -234,6 +250,22 @@
 
       </div>
 
+      <!-- Registro de Respuestas por Pregunta (Google Sheets Sync Matrix) -->
+      <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-md">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+            <span>📊</span> Registro por Pregunta (Google Sheet)
+          </span>
+          <span class="text-[10px] text-slate-400 font-mono" id="respuestasMatchIdTag">PART-001</span>
+        </div>
+        <p class="text-[11px] text-slate-400 mb-3">
+          Haz clic en cualquier pregunta para alternar manualmente entre <span class="text-emerald-400 font-semibold">Correcta</span> e <span class="text-rose-400 font-semibold">Incorrecta</span> para cada equipo.
+        </p>
+        <div class="space-y-3" id="respuestasMatrixContainer">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+
       <!-- Quick Launch External Screens Buttons -->
       <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-md">
         <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-3">Vista de Proyector</span>
@@ -303,13 +335,25 @@
         👑
       </div>
       <h3 class="text-3xl font-black text-yellow-400 mb-2">¡Pelea Finalizada!</h3>
-      <p class="text-xl text-white mb-6 font-bold">
+      <p class="text-xl text-white mb-3 font-bold">
         Ganador: <span class="text-amber-300 font-extrabold text-2xl uppercase" id="modVictoryWinnerName">Esquina Técnica</span>
       </p>
 
-      <button onclick="dismissVictoryModal()" class="w-full min-h-[54px] py-4 bg-gradient-to-r from-amber-500 to-yellow-600 hover:brightness-110 text-slate-950 font-black rounded-2xl text-base shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all">
-        <span>📋 Regresar al Panel Moderador</span>
-      </button>
+      <div class="p-3.5 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 text-xs font-semibold mb-6 flex flex-col items-center gap-1.5 shadow-inner">
+        <div class="flex items-center gap-1.5 text-emerald-400 font-bold">
+          <span>📊</span> Webhook POST enviado a Google Sheets
+        </div>
+        <span class="text-[11px] text-emerald-300/80 font-mono" id="modVictoryMatchIdText">Partida: PART-001</span>
+      </div>
+
+      <div class="space-y-3">
+        <button onclick="triviaApp.sendWebhookPost(true)" class="w-full min-h-[48px] py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl text-sm shadow-md flex items-center justify-center gap-2 active:scale-95 transition-all">
+          <span>📤 Reenviar Webhook a Google Sheets</span>
+        </button>
+        <button onclick="dismissVictoryModal()" class="w-full min-h-[54px] py-4 bg-gradient-to-r from-amber-500 to-yellow-600 hover:brightness-110 text-slate-950 font-black rounded-2xl text-base shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all">
+          <span>📋 Regresar al Panel Moderador</span>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -354,6 +398,7 @@
       if (isGameOver && !victoryModalDismissed) {
         const winner = currentState.equipoGanador || (equipoA_Rounds >= 2 ? 'Esquina Técnica' : 'Esquina Ruda');
         document.getElementById('modVictoryWinnerName').innerText = winner;
+        document.getElementById('modVictoryMatchIdText').innerText = `Partida: ${currentState.idPartida || "PART-001"}`;
         if (modVictoryModal) {
           modVictoryModal.classList.remove('hidden');
           modVictoryModal.classList.add('flex');
@@ -365,10 +410,22 @@
         }
       }
 
-      // Header status guide
+      // Header status guide & Webhook badge
+      document.getElementById('headerMatchId').innerText = currentState.idPartida || "PART-001";
       document.getElementById('headerGlobalScore').innerText = `Equipo A (Técnica): ${equipoA_Rounds} R | Equipo B (Ruda): ${equipoB_Rounds} R`;
       document.getElementById('headerRoundIndicator').innerText = `ROUND ${roundActivo} (Meta: ${currentGoal} aciertos)`;
       document.getElementById('headerAciertosText').innerText = `${equipoA_Aciertos}/${currentGoal} vs ${equipoB_Aciertos}/${currentGoal}`;
+
+      const webhookBadge = document.getElementById('headerWebhookBadge');
+      if (webhookBadge) {
+        if (currentState.webhookSentForId === currentState.idPartida) {
+          webhookBadge.className = "text-xs font-bold px-3 py-1 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40";
+          webhookBadge.innerText = "📊 Sheet: Exportado ✓";
+        } else {
+          webhookBadge.className = "text-xs font-bold px-3 py-1 rounded-xl bg-slate-900 text-slate-400 border border-slate-700";
+          webhookBadge.innerText = "📊 Sheet: Pendiente";
+        }
+      }
 
       // 1. Selector de Round / Versión
       const versionContainer = document.getElementById('versionSelectorContainer');
@@ -479,6 +536,80 @@
       // Círculos de Progreso Moderador
       renderProgressDots('modDotsTecnica', equipoA_Aciertos, currentGoal, 'tecnica');
       renderProgressDots('modDotsRuda', equipoB_Aciertos, currentGoal, 'ruda');
+
+      // Render Matrix de Respuestas por Pregunta
+      renderRespuestasMatrix();
+    }
+
+    function renderRespuestasMatrix() {
+      const container = document.getElementById('respuestasMatrixContainer');
+      const tag = document.getElementById('respuestasMatchIdTag');
+      if (!container || !currentState) return;
+
+      if (tag) tag.innerText = currentState.idPartida || 'PART-001';
+      container.innerHTML = '';
+
+      const respuestas = currentState.respuestas || { equipoA: {}, equipoB: {} };
+      const roundActivo = currentState.round_activo || 1;
+      const roundKey = `ronda${roundActivo}`;
+      const totalQuestions = (TRIVIA_QUESTIONS[`version${roundActivo}`]?.questions || []).length;
+
+      const roundTitleDiv = document.createElement('div');
+      roundTitleDiv.className = 'text-xs font-bold text-amber-300 border-b border-slate-800 pb-1.5 flex justify-between items-center';
+      roundTitleDiv.innerHTML = `
+        <span>Round ${roundActivo} (${totalQuestions} preguntas)</span>
+        <span class="text-[10px] text-slate-400 font-normal">Pregunta activa: P${(currentState.questionIndex || 0) + 1}</span>
+      `;
+      container.appendChild(roundTitleDiv);
+
+      ['equipoA', 'equipoB'].forEach(teamKey => {
+        const teamName = teamKey === 'equipoA' ? 'Equipo Azul (Técnica)' : 'Equipo Rojo (Ruda)';
+        const teamColorClass = teamKey === 'equipoA' ? 'text-sky-400' : 'text-rose-400';
+        const teamRespList = (respuestas[teamKey] && respuestas[teamKey][roundKey]) ? respuestas[teamKey][roundKey] : [];
+
+        const teamRow = document.createElement('div');
+        teamRow.className = 'bg-slate-950 p-2.5 rounded-xl border border-slate-800/80';
+
+        const titleSpan = document.createElement('div');
+        titleSpan.className = `text-[11px] font-bold ${teamColorClass} mb-1.5 flex justify-between items-center`;
+        const correctCount = teamRespList.filter(r => r === 'Correcta').length;
+        titleSpan.innerHTML = `
+          <span>${teamName}</span>
+          <span class="text-[10px] font-semibold text-slate-400">${correctCount} aciertos</span>
+        `;
+        teamRow.appendChild(titleSpan);
+
+        const grid = document.createElement('div');
+        grid.className = 'flex flex-wrap gap-1.5';
+
+        for (let qIdx = 0; qIdx < totalQuestions; qIdx++) {
+          const val = teamRespList[qIdx] || 'Incorrecta';
+          const isCorrect = val === 'Correcta';
+          const isCurrentQ = qIdx === currentState.questionIndex;
+
+          const badge = document.createElement('button');
+          badge.type = 'button';
+          badge.className = `text-[11px] font-extrabold px-2 py-1 rounded-lg border transition-all active:scale-95 flex items-center gap-1 ${
+            isCorrect
+              ? (teamKey === 'equipoA' 
+                  ? 'bg-sky-950 text-sky-300 border-sky-500/60 hover:bg-sky-900' 
+                  : 'bg-rose-950 text-rose-300 border-rose-500/60 hover:bg-rose-900')
+              : 'bg-slate-900 text-slate-500 border-slate-800 hover:border-slate-700'
+          } ${isCurrentQ ? 'ring-2 ring-amber-400' : ''}`;
+
+          badge.innerHTML = `P${qIdx + 1} ${isCorrect ? '✓' : '✕'}`;
+          badge.title = `Pregunta ${qIdx + 1} (${teamName}): ${val}. Haz clic para cambiar.`;
+          badge.onclick = () => {
+            const nextVal = isCorrect ? 'Incorrecta' : 'Correcta';
+            triviaApp.setQuestionAnswer(teamKey, roundActivo, qIdx, nextVal);
+          };
+
+          grid.appendChild(badge);
+        }
+
+        teamRow.appendChild(grid);
+        container.appendChild(teamRow);
+      });
     }
 
     function renderProgressDots(containerId, count, goal, teamClass) {
@@ -518,6 +649,7 @@
     }
 
     function triggerIncorrectEffect() {
+      triviaApp.recordQuestionResult('none');
       triviaApp.triggerIncorrect();
     }
 
@@ -530,11 +662,18 @@
     function closeAssignPointModal() {
       document.getElementById('assignPointModal').classList.add('hidden');
       document.getElementById('assignPointModal').classList.remove('flex');
+      triviaApp.recordQuestionResult('none');
+    }
+
+    function closeAssignPointModalOnly() {
+      document.getElementById('assignPointModal').classList.add('hidden');
+      document.getElementById('assignPointModal').classList.remove('flex');
     }
 
     function assignPointToTeam(team) {
+      triviaApp.recordQuestionResult(team);
       triviaApp.addAcierto(team, 1);
-      closeAssignPointModal();
+      closeAssignPointModalOnly();
     }
 
     // Modal: Reset PIN
