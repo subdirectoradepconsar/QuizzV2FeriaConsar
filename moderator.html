@@ -394,7 +394,7 @@
           <div class="font-extrabold text-sm mb-0.5">Round ${roundNum}</div>
           <div class="text-[10px] opacity-80">Meta: ${GOALS[roundNum]} aciertos</div>
         `;
-        btn.onclick = () => triviaApp.setRound(roundNum);
+        btn.onclick = () => { cancelAutoNextQuestion(); triviaApp.setRound(roundNum); };
         versionContainer.appendChild(btn);
       });
 
@@ -489,13 +489,38 @@
       }
     }
 
+    let autoNextTimeout = null;
+
+    function scheduleAutoNextQuestion(delayMs = 1800) {
+      cancelAutoNextQuestion();
+      const startQIdx = currentState ? currentState.questionIndex : 0;
+      const startRound = currentState ? currentState.round_activo : 1;
+
+      autoNextTimeout = setTimeout(() => {
+        if (currentState && !currentState.juego_terminado) {
+          if (currentState.questionIndex === startQIdx && currentState.round_activo === startRound) {
+            nextQuestion();
+          }
+        }
+      }, delayMs);
+    }
+
+    function cancelAutoNextQuestion() {
+      if (autoNextTimeout) {
+        clearTimeout(autoNextTimeout);
+        autoNextTimeout = null;
+      }
+    }
+
     function prevQuestion() {
+      cancelAutoNextQuestion();
       if (currentState && currentState.questionIndex > 0) {
         triviaApp.setQuestionIndex(currentState.questionIndex - 1);
       }
     }
 
     function nextQuestion() {
+      cancelAutoNextQuestion();
       if (currentState) {
         const total = TRIVIA_QUESTIONS[currentState.versionId].questions.length;
         if (currentState.questionIndex < total - 1) {
@@ -515,6 +540,7 @@
     }
 
     function triggerIncorrectEffect() {
+      cancelAutoNextQuestion();
       triviaApp.recordQuestionResult('none');
       triviaApp.triggerIncorrect();
     }
@@ -529,6 +555,7 @@
       document.getElementById('assignPointModal').classList.add('hidden');
       document.getElementById('assignPointModal').classList.remove('flex');
       triviaApp.recordQuestionResult('none');
+      scheduleAutoNextQuestion(1800);
     }
 
     function closeAssignPointModalOnly() {
@@ -540,6 +567,7 @@
       triviaApp.recordQuestionResult(team);
       triviaApp.addAcierto(team, 1);
       closeAssignPointModalOnly();
+      scheduleAutoNextQuestion(1800);
     }
 
     // Modal: Reset PIN
