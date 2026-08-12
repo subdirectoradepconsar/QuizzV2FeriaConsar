@@ -31,67 +31,47 @@
   <audio id="boxingBellAudio" src="Sonidocampanadebox.mp3" preload="auto"></audio>
 
   <!-- Header Section -->
-  <header class="bg-slate-900 border-b border-amber-500/30 px-4 md:px-6 py-4 flex items-center justify-between shadow-lg sticky top-0 z-40">
-    <div class="flex items-center gap-3">
-      <div class="w-12 h-12 rounded-xl bg-amber-500 flex items-center justify-center text-slate-950 font-bold shadow-md">
-        <svg class="w-7 h-7 fill-current" viewBox="0 0 24 24">
-          <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-5.45 9-12V7l-9-5z"/>
-        </svg>
+  <header class="bg-slate-900 border-b border-amber-500/30 px-4 md:px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 shadow-lg sticky top-0 z-40">
+    <!-- Left Section: Title & Marcador Global -->
+    <div class="flex items-center gap-4 flex-wrap">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-amber-500 flex items-center justify-center text-slate-950 font-bold shadow-md">
+          <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24">
+            <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-5.45 9-12V7l-9-5z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg md:text-xl font-extrabold text-white">PANEL MODERADOR <span class="text-amber-400 font-lucha">CONSAR</span></h1>
+          <p class="text-[11px] text-slate-400">Control Táctil de Escenario (Tablet & Móvil)</p>
+        </div>
       </div>
-      <div>
-        <h1 class="text-xl md:text-2xl font-extrabold text-white">PANEL MODERADOR <span class="text-amber-400 font-lucha">CONSAR</span></h1>
-        <p class="text-xs text-slate-400">Control Táctil de Escenario (Tablet & Móvil)</p>
+
+      <!-- Marcador Global de Rounds (Ubicado a la izquierda) -->
+      <div class="flex items-center gap-2 bg-slate-950/80 px-3.5 py-1.5 rounded-xl border border-amber-500/40 shadow-inner">
+        <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">Marcador Global:</span>
+        <span class="text-sm font-extrabold text-white" id="headerGlobalScore">Equipo A: 0 R | Equipo B: 0 R</span>
       </div>
     </div>
 
-    <div class="flex items-center gap-2 sm:gap-3">
+    <!-- Right Section: ID Partida & Campana Button -->
+    <div class="flex items-center gap-3">
+      <!-- ID de Partida Activa -->
+      <div class="flex items-center gap-2 bg-slate-950/80 px-3.5 py-1.5 rounded-xl border border-slate-700">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">ID Partida:</span>
+        <span class="text-sm font-black text-amber-300 font-mono" id="headerMatchId">PART-001</span>
+      </div>
+
       <!-- Boxing Ring Bell Button (Sonidocampanadebox.mp3) -->
-      <button onclick="triviaApp.ringBell()" class="min-h-[48px] px-4 py-3 bg-gradient-to-r from-amber-500 to-yellow-600 hover:brightness-110 text-slate-950 font-black rounded-xl text-sm shadow-lg flex items-center gap-2 active:scale-95 transition-all">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+      <button onclick="triviaApp.ringBell()" class="min-h-[44px] px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-600 hover:brightness-110 text-slate-950 font-black rounded-xl text-sm shadow-lg flex items-center gap-2 active:scale-95 transition-all">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
         <span>Campana Ring</span>
       </button>
     </div>
   </header>
 
-  <!-- Header Guía de Estado Actual (Marcador Global, Aciertos, Round Activo y Google Sheets Export) -->
-  <div class="bg-gradient-to-r from-slate-900 via-amber-950/40 to-slate-900 border-b border-amber-500/30 px-4 py-3 text-center flex flex-wrap items-center justify-around gap-4 shadow-inner">
-    <!-- ID de Partida Activa -->
-    <div class="flex items-center gap-2 bg-slate-950/80 px-3.5 py-1.5 rounded-xl border border-slate-700">
-      <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">ID Partida:</span>
-      <span class="text-sm font-black text-amber-300 font-mono" id="headerMatchId">PART-001</span>
-    </div>
-
-    <!-- Marcador Global de Rounds -->
-    <div class="flex items-center gap-2 bg-slate-950/80 px-4 py-1.5 rounded-xl border border-amber-500/40">
-      <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">Marcador Global:</span>
-      <span class="text-base font-extrabold text-white" id="headerGlobalScore">Equipo A: 0 R | Equipo B: 0 R</span>
-    </div>
-
-    <!-- Indicador de Round Activo & Meta -->
-    <div class="flex items-center gap-2 bg-amber-500/20 px-4 py-1.5 rounded-xl border border-amber-500/50">
-      <span class="text-xs font-extrabold text-amber-300 uppercase tracking-widest" id="headerRoundIndicator">ROUND 1 (Meta: 5 aciertos)</span>
-    </div>
-
-    <!-- Aciertos del Round Activo -->
-    <div class="flex items-center gap-2 bg-slate-950/80 px-4 py-1.5 rounded-xl border border-slate-700">
-      <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Aciertos del Round:</span>
-      <span class="text-base font-extrabold text-amber-300" id="headerAciertosText">0/5 vs 0/5</span>
-    </div>
-
-    <!-- Google Sheets Webhook Status & Manual Export Button -->
-    <div class="flex items-center gap-2">
-      <span id="headerWebhookBadge" class="text-xs font-bold px-3 py-1 rounded-xl bg-slate-900 text-slate-400 border border-slate-700">
-        📊 Sheet: Pendiente
-      </span>
-      <button onclick="triviaApp.sendWebhookPost(true)" title="Forzar envío POST a Google Sheets Webhook" class="px-2.5 py-1 bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/50 text-emerald-300 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center gap-1">
-        <span>📤 Exportar</span>
-      </button>
-    </div>
-  </div>
-
   <main class="max-w-7xl mx-auto w-full p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
 
-    <!-- LEFT COLUMN: Selection of Round (Lg: 3 cols) -->
+    <!-- LEFT COLUMN: Selection of Round & Sheet Export (Lg: 3 cols) -->
     <div class="lg:col-span-3 flex flex-col gap-6">
       <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-md">
         <label class="block text-xs font-bold uppercase tracking-wider text-amber-400 mb-3">
@@ -99,6 +79,21 @@
         </label>
         <div class="grid grid-cols-1 gap-3" id="versionSelectorContainer">
           <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+
+      <!-- Indicadores de Estado Google Sheets / Webhook (Posición inferior del bloque de Round) -->
+      <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-md">
+        <label class="block text-xs font-bold uppercase tracking-wider text-amber-400 mb-3">
+          Registro Google Sheet
+        </label>
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <span id="headerWebhookBadge" class="text-xs font-bold px-3 py-2 rounded-xl bg-slate-950 text-slate-400 border border-slate-700">
+            📊 Sheet: Pendiente
+          </span>
+          <button onclick="triviaApp.sendWebhookPost(true)" title="Forzar envío POST a Google Sheets Webhook" class="px-3.5 py-2 bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/50 text-emerald-300 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 shadow-md">
+            <span>📲 Exportar</span>
+          </button>
         </div>
       </div>
     </div>
@@ -368,8 +363,6 @@
       // Header status guide & Webhook badge
       document.getElementById('headerMatchId').innerText = currentState.idPartida || "PART-001";
       document.getElementById('headerGlobalScore').innerText = `Equipo A (Técnica): ${equipoA_Rounds} R | Equipo B (Ruda): ${equipoB_Rounds} R`;
-      document.getElementById('headerRoundIndicator').innerText = `ROUND ${roundActivo} (Meta: ${currentGoal} aciertos)`;
-      document.getElementById('headerAciertosText').innerText = `${equipoA_Aciertos}/${currentGoal} vs ${equipoB_Aciertos}/${currentGoal}`;
 
       const webhookBadge = document.getElementById('headerWebhookBadge');
       if (webhookBadge) {
