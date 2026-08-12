@@ -2,7 +2,7 @@
  * CONSAR - Trivia Lucha Libre Financiera
  * Banco de Preguntas Actualizado por Rounds & Modalidades:
  * - Round 1: Opción Múltiple (8 preguntas)
- * - Round 2: Relevo por equipos / Verdadero o Falso (10 preguntas: 5 Set Equipo 1 + 5 Set Equipo 2)
+ * - Round 2: Verdadero o Falso (10 preguntas)
  * - Round 3: Respuesta Abierta / Tercera Caída Definitoria (6 preguntas)
  */
 
@@ -112,13 +112,11 @@ const TRIVIA_QUESTIONS = {
   },
   version2: {
     id: "version2",
-    name: "Round 2: Relevo por Equipos (Verdadero / Falso)",
+    name: "Round 2: Verdadero o Falso",
     mode: "boolean",
     questions: [
-      // Set Primer Equipo (Preguntas 1-5)
       {
         id: 1,
-        teamSet: "Set Primer Equipo",
         question: "¿Se pueden hacer aportaciones voluntarias a tu cuenta Afore?",
         options: [
           "a) Sí (Verdadero)",
@@ -129,7 +127,6 @@ const TRIVIA_QUESTIONS = {
       },
       {
         id: 2,
-        teamSet: "Set Primer Equipo",
         question: "¿Los SIEFORE son las cuentas individuales de los trabajadores?",
         options: [
           "a) Sí (Verdadero)",
@@ -140,7 +137,6 @@ const TRIVIA_QUESTIONS = {
       },
       {
         id: 3,
-        teamSet: "Set Primer Equipo",
         question: "¿Un trabajador independiente puede hacer ahorro voluntario?",
         options: [
           "a) Sí (Verdadero)",
@@ -151,7 +147,6 @@ const TRIVIA_QUESTIONS = {
       },
       {
         id: 4,
-        teamSet: "Set Primer Equipo",
         question: "¿Debes dejar de revisar las comisiones una vez que elegiste tu Afore?",
         options: [
           "a) Sí (Verdadero)",
@@ -162,7 +157,6 @@ const TRIVIA_QUESTIONS = {
       },
       {
         id: 5,
-        teamSet: "Set Primer Equipo",
         question: "¿Las Afores se encargan de administrar los fondos para el retiro?",
         options: [
           "a) Sí (Verdadero)",
@@ -171,10 +165,8 @@ const TRIVIA_QUESTIONS = {
         correct: 0,
         explanation: "¡Sí! Su función principal es administrar, resguardar e invertir tu dinero para la pensión futura."
       },
-      // Set Segundo Equipo (Preguntas 6-10)
       {
         id: 6,
-        teamSet: "Set Segundo Equipo",
         question: "¿Debes cambiarte de Afore solo porque cambiaste de empleo?",
         options: [
           "a) Sí (Verdadero)",
@@ -185,7 +177,6 @@ const TRIVIA_QUESTIONS = {
       },
       {
         id: 7,
-        teamSet: "Set Segundo Equipo",
         question: "¿El ahorro voluntario puede ayudarte a tener una mejor pensión?",
         options: [
           "a) Sí (Verdadero)",
@@ -196,7 +187,6 @@ const TRIVIA_QUESTIONS = {
       },
       {
         id: 8,
-        teamSet: "Set Segundo Equipo",
         question: "¿Guardar tu dinero «bajo el colchón» lo hace crecer?",
         options: [
           "a) Sí (Verdadero)",
@@ -207,7 +197,6 @@ const TRIVIA_QUESTIONS = {
       },
       {
         id: 9,
-        teamSet: "Set Segundo Equipo",
         question: "¿La CONSAR es la autoridad que regula el Sistema de Ahorro para el Retiro?",
         options: [
           "a) Sí (Verdadero)",
@@ -218,7 +207,6 @@ const TRIVIA_QUESTIONS = {
       },
       {
         id: 10,
-        teamSet: "Set Segundo Equipo",
         question: "¿El «coyotaje» es un trámite oficial y recomendable?",
         options: [
           "a) Sí (Verdadero)",

@@ -324,8 +324,7 @@
       }
 
       // STATE: Pregunta Activa
-      const teamSubTitle = currentQuestion.teamSet ? ` • ${currentQuestion.teamSet}` : '';
-      document.getElementById('versionTitle').innerHTML = `<span>🏆</span> ${currentVersion.name}${teamSubTitle}`;
+      document.getElementById('versionTitle').innerHTML = `<span>🏆</span> ${currentVersion.name}`;
       document.getElementById('questionBadge').innerText = `PREGUNTA ${(state.questionIndex || 0) + 1} / ${currentVersion.questions.length}`;
       document.getElementById('questionText').innerText = currentQuestion.question;
 

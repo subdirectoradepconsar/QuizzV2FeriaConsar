@@ -23,6 +23,40 @@ const DEFAULT_RESPUESTAS = () => ({
   }
 });
 
+const DEFAULT_ACIERTOS_POR_RONDA = () => ({
+  ronda1: { equipoA: 0, equipoB: 0 },
+  ronda2: { equipoA: 0, equipoB: 0 },
+  ronda3: { equipoA: 0, equipoB: 0 }
+});
+
+function syncAciertosState(state) {
+  if (!state.aciertos_por_ronda) {
+    state.aciertos_por_ronda = DEFAULT_ACIERTOS_POR_RONDA();
+  }
+  const respuestas = state.respuestas || DEFAULT_RESPUESTAS();
+  ['ronda1', 'ronda2', 'ronda3'].forEach(rKey => {
+    if (!state.aciertos_por_ronda[rKey]) {
+      state.aciertos_por_ronda[rKey] = { equipoA: 0, equipoB: 0 };
+    }
+    const countA = (respuestas.equipoA?.[rKey] || []).filter(r => r === "Correcta").length;
+    const countB = (respuestas.equipoB?.[rKey] || []).filter(r => r === "Correcta").length;
+
+    state.aciertos_por_ronda[rKey].equipoA = Math.max(state.aciertos_por_ronda[rKey].equipoA || 0, countA);
+    state.aciertos_por_ronda[rKey].equipoB = Math.max(state.aciertos_por_ronda[rKey].equipoB || 0, countB);
+  });
+
+  const activeRound = state.round_activo || 1;
+  const activeKey = `ronda${activeRound}`;
+  state.aciertos_round = {
+    equipoA: state.aciertos_por_ronda[activeKey]?.equipoA || 0,
+    equipoB: state.aciertos_por_ronda[activeKey]?.equipoB || 0
+  };
+  state.scores = {
+    tecnica: state.aciertos_round.equipoA,
+    ruda: state.aciertos_round.equipoB
+  };
+}
+
 function getNextMatchId(currentId) {
   if (!currentId || typeof currentId !== 'string') return "PART-001";
   const match = currentId.match(/(\d+)/);
@@ -45,7 +79,8 @@ const DEFAULT_STATE = {
   juego_terminado: false,
   equipoGanador: null,
   marcador_global: { equipoA: 0, equipoB: 0 }, // Rounds ganados
-  aciertos_round: { equipoA: 0, equipoB: 0 },  // Aciertos parciales del round activo
+  aciertos_por_ronda: DEFAULT_ACIERTOS_POR_RONDA(), // Aciertos individuales aislados por ronda
+  aciertos_round: { equipoA: 0, equipoB: 0 },  // Aciertos del round activo
   respuestas: DEFAULT_RESPUESTAS(),
   // Propiedades de retrocompatibilidad
   scores: { tecnica: 0, ruda: 0 },
@@ -156,23 +191,31 @@ class TriviaApp {
       if (saved) {
         const parsed = JSON.parse(saved);
         const loaded = parsed.estado_trivia || parsed.state || parsed;
-        return {
+        const loadedState = {
           ...DEFAULT_STATE,
           ...loaded,
           idPartida: loaded.idPartida || DEFAULT_STATE.idPartida,
           webhookSentForId: loaded.webhookSentForId || null,
           marcador_global: { ...DEFAULT_STATE.marcador_global, ...(loaded.marcador_global || {}) },
-          aciertos_round: { ...DEFAULT_STATE.aciertos_round, ...(loaded.aciertos_round || {}) },
+          aciertos_por_ronda: loaded.aciertos_por_ronda ? {
+            ronda1: { ...DEFAULT_ACIERTOS_POR_RONDA().ronda1, ...(loaded.aciertos_por_ronda.ronda1 || {}) },
+            ronda2: { ...DEFAULT_ACIERTOS_POR_RONDA().ronda2, ...(loaded.aciertos_por_ronda.ronda2 || {}) },
+            ronda3: { ...DEFAULT_ACIERTOS_POR_RONDA().ronda3, ...(loaded.aciertos_por_ronda.ronda3 || {}) }
+          } : DEFAULT_ACIERTOS_POR_RONDA(),
           respuestas: loaded.respuestas ? {
             equipoA: { ...DEFAULT_RESPUESTAS().equipoA, ...(loaded.respuestas.equipoA || {}) },
             equipoB: { ...DEFAULT_RESPUESTAS().equipoB, ...(loaded.respuestas.equipoB || {}) }
           } : DEFAULT_RESPUESTAS()
         };
+        syncAciertosState(loadedState);
+        return loadedState;
       }
     } catch (e) {
       console.warn("Could not read state from localStorage:", e);
     }
-    return { ...DEFAULT_STATE };
+    const defaultSt = { ...DEFAULT_STATE };
+    syncAciertosState(defaultSt);
+    return defaultSt;
   }
 
   saveAndSyncState(actionEvent = null) {
@@ -201,6 +244,7 @@ class TriviaApp {
         equipoA: this.state.marcador_global.equipoA || 0,
         equipoB: this.state.marcador_global.equipoB || 0
       },
+      aciertos_por_ronda: this.state.aciertos_por_ronda || DEFAULT_ACIERTOS_POR_RONDA(),
       aciertos_round: {
         equipoA: this.state.aciertos_round.equipoA || 0,
         equipoB: this.state.aciertos_round.equipoB || 0
@@ -254,6 +298,13 @@ class TriviaApp {
     if (newState.marcador_global) {
       this.state.marcador_global = { ...newState.marcador_global };
     }
+    if (newState.aciertos_por_ronda) {
+      this.state.aciertos_por_ronda = {
+        ronda1: { ...DEFAULT_ACIERTOS_POR_RONDA().ronda1, ...(newState.aciertos_por_ronda.ronda1 || {}) },
+        ronda2: { ...DEFAULT_ACIERTOS_POR_RONDA().ronda2, ...(newState.aciertos_por_ronda.ronda2 || {}) },
+        ronda3: { ...DEFAULT_ACIERTOS_POR_RONDA().ronda3, ...(newState.aciertos_por_ronda.ronda3 || {}) }
+      };
+    }
     if (newState.aciertos_round) {
       this.state.aciertos_round = { ...newState.aciertos_round };
     }
@@ -270,18 +321,9 @@ class TriviaApp {
       this.state.webhookSentForId = newState.webhookSentForId;
     }
 
-    // Adaptador para llaves legacy
-    if (newState.scores && !newState.aciertos_round) {
-      this.state.aciertos_round = { equipoA: newState.scores.tecnica || 0, equipoB: newState.scores.ruda || 0 };
-    }
-    if (newState.caidas && !newState.marcador_global) {
-      this.state.marcador_global = { equipoA: newState.caidas.tecnica || 0, equipoB: newState.caidas.ruda || 0 };
-    }
-
     this.state = { ...this.state, ...newState };
 
     if (!this.state.marcador_global) this.state.marcador_global = { equipoA: 0, equipoB: 0 };
-    if (!this.state.aciertos_round) this.state.aciertos_round = { equipoA: 0, equipoB: 0 };
     if (!this.state.respuestas) this.state.respuestas = DEFAULT_RESPUESTAS();
 
     if (this.state.round_activo) {
@@ -291,14 +333,7 @@ class TriviaApp {
       if (match) this.state.round_activo = parseInt(match[0]);
     }
 
-    this.state.caidas = {
-      tecnica: this.state.marcador_global.equipoA || 0,
-      ruda: this.state.marcador_global.equipoB || 0
-    };
-    this.state.scores = {
-      tecnica: this.state.aciertos_round.equipoA || 0,
-      ruda: this.state.aciertos_round.equipoB || 0
-    };
+    syncAciertosState(this.state);
 
     // Auto-envío de Webhook si la partida acaba de finalizar y no se ha enviado aún
     if (this.state.juego_terminado && this.state.webhookSentForId !== this.state.idPartida) {
@@ -328,6 +363,9 @@ class TriviaApp {
       this.state.questionIndex = 0;
       this.state.isAnswerRevealed = false;
       this.state.isQuestionVisible = true;
+
+      syncAciertosState(this.state);
+
       this.saveAndSyncState({ type: "SET_ROUND", action: "ACTUALIZAR_MARCADOR", round_activo: roundNum });
     }
   }
@@ -341,6 +379,7 @@ class TriviaApp {
       this.state.questionIndex = 0;
       this.state.isAnswerRevealed = false;
       this.state.isQuestionVisible = true;
+      syncAciertosState(this.state);
       this.saveAndSyncState({ type: "SET_VERSION", action: "ACTUALIZAR_MARCADOR", versionId });
     }
   }
@@ -392,6 +431,8 @@ class TriviaApp {
       }
     }
 
+    syncAciertosState(this.state);
+
     this.saveAndSyncState({
       type: "RECORD_QUESTION_RESULT",
       action: "ACTUALIZAR_MARCADOR",
@@ -413,6 +454,18 @@ class TriviaApp {
     if (this.state.respuestas[key] && this.state.respuestas[key][roundKey]) {
       if (questionIdx >= 0 && questionIdx < this.state.respuestas[key][roundKey].length) {
         this.state.respuestas[key][roundKey][questionIdx] = value;
+
+        const count = this.state.respuestas[key][roundKey].filter(r => r === "Correcta").length;
+        if (!this.state.aciertos_por_ronda) {
+          this.state.aciertos_por_ronda = DEFAULT_ACIERTOS_POR_RONDA();
+        }
+        if (!this.state.aciertos_por_ronda[roundKey]) {
+          this.state.aciertos_por_ronda[roundKey] = { equipoA: 0, equipoB: 0 };
+        }
+        this.state.aciertos_por_ronda[roundKey][key] = count;
+
+        syncAciertosState(this.state);
+
         this.saveAndSyncState({
           type: "SET_QUESTION_ANSWER",
           action: "ACTUALIZAR_MARCADOR",
@@ -433,7 +486,6 @@ class TriviaApp {
     const key = (team === 'tecnica' || team === 'equipoA' || team === 'equipoAzul') ? 'equipoA' : 'equipoB';
     const teamDisplayName = key === 'equipoA' ? 'Esquina Técnica' : 'Esquina Ruda';
 
-    // Registrar explícitamente el resultado de la pregunta actual para ambos equipos
     const roundNum = this.state.round_activo || 1;
     const qIdx = this.state.questionIndex || 0;
     const roundKey = `ronda${roundNum}`;
@@ -441,14 +493,16 @@ class TriviaApp {
     if (!this.state.respuestas) {
       this.state.respuestas = DEFAULT_RESPUESTAS();
     }
+    if (!this.state.aciertos_por_ronda) {
+      this.state.aciertos_por_ronda = DEFAULT_ACIERTOS_POR_RONDA();
+    }
     
-    // El equipo que suma punto queda registrado como "Correcta" para esta pregunta en el índice qIdx exacto
+    // Registrar explícitamente el resultado de la pregunta actual para ambos equipos
     if (this.state.respuestas[key] && this.state.respuestas[key][roundKey]) {
       if (qIdx >= 0 && qIdx < this.state.respuestas[key][roundKey].length) {
         this.state.respuestas[key][roundKey][qIdx] = "Correcta";
       }
     }
-    // El otro equipo queda registrado como "Incorrecta" para esta pregunta si no había obtenido acierto
     const otherKey = key === 'equipoA' ? 'equipoB' : 'equipoA';
     if (this.state.respuestas[otherKey] && this.state.respuestas[otherKey][roundKey]) {
       if (qIdx >= 0 && qIdx < this.state.respuestas[otherKey][roundKey].length) {
@@ -458,19 +512,21 @@ class TriviaApp {
       }
     }
 
-    // 1. Incrementar los aciertos del round actual
-    this.state.aciertos_round[key] = (this.state.aciertos_round[key] || 0) + amount;
-    this.state.scores[key === 'equipoA' ? 'tecnica' : 'ruda'] = this.state.aciertos_round[key];
+    // 1. Incrementar aciertos aislados de la ronda activa
+    if (!this.state.aciertos_por_ronda[roundKey]) {
+      this.state.aciertos_por_ronda[roundKey] = { equipoA: 0, equipoB: 0 };
+    }
+    this.state.aciertos_por_ronda[roundKey][key] = (this.state.aciertos_por_ronda[roundKey][key] || 0) + amount;
 
-    const currentGoal = ROUND_GOALS[this.state.round_activo] || 5;
+    syncAciertosState(this.state);
+
+    const currentGoal = ROUND_GOALS[roundNum] || 5;
 
     // 2. Evaluación de Meta del Round
     if (this.state.aciertos_round[key] >= currentGoal) {
-      // Se le otorga 1 Punto de Round automáticamente en el Marcador Global
       this.state.marcador_global[key] = (this.state.marcador_global[key] || 0) + 1;
       this.state.caidas[key === 'equipoA' ? 'tecnica' : 'ruda'] = this.state.marcador_global[key];
 
-      // Condición de Victoria Global: Primer equipo en alcanzar 2 Rounds ganados
       if (this.state.marcador_global[key] >= 2) {
         this.state.juego_terminado = true;
         this.state.equipoGanador = teamDisplayName;
@@ -484,16 +540,15 @@ class TriviaApp {
           team: key,
           equipoGanador: teamDisplayName,
           teamName: teamDisplayName,
-          round: this.state.round_activo
+          round: roundNum
         };
         this.saveAndSyncState(evt);
         this.sendWebhookPost();
       } else {
-        // Se activa el evento "ROUND GANADO" con el sonido de campana de boxeo
         this.playBellSound();
         this.triggerConfetti();
 
-        const roundGanadoNum = this.state.round_activo;
+        const roundGanadoNum = roundNum;
         const siguienteRoundNum = Math.min(3, roundGanadoNum + 1);
 
         const evt = {
@@ -505,19 +560,18 @@ class TriviaApp {
           siguienteRound: siguienteRoundNum
         };
 
-        // Avanza automáticamente al siguiente Round y reinicia contadores de aciertos parciales a 0
+        // Avanza automáticamente al siguiente Round
         this.state.round_activo = siguienteRoundNum;
         this.state.versionId = `version${siguienteRoundNum}`;
         this.state.questionIndex = 0;
         this.state.isAnswerRevealed = false;
         this.state.isQuestionVisible = true;
-        this.state.aciertos_round = { equipoA: 0, equipoB: 0 };
-        this.state.scores = { tecnica: 0, ruda: 0 };
+
+        syncAciertosState(this.state);
 
         this.saveAndSyncState(evt);
       }
     } else {
-      // Acierto individual en progreso
       this.playPointSound();
       const evt = {
         type: "ADD_POINT",
@@ -651,8 +705,10 @@ class TriviaApp {
     this.state.round_activo = 1;
     this.state.versionId = "version1";
     this.state.marcador_global = { equipoA: 0, equipoB: 0 };
+    this.state.aciertos_por_ronda = DEFAULT_ACIERTOS_POR_RONDA();
     this.state.aciertos_round = { equipoA: 0, equipoB: 0 };
     this.state.respuestas = DEFAULT_RESPUESTAS();
+    syncAciertosState(this.state);
     this.state.scores = { tecnica: 0, ruda: 0 };
     this.state.caidas = { tecnica: 0, ruda: 0 };
     this.state.questionIndex = 0;
