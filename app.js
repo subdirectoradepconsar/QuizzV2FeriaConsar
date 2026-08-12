@@ -41,8 +41,8 @@ function syncAciertosState(state) {
     const countA = (respuestas.equipoA?.[rKey] || []).filter(r => r === "Correcta").length;
     const countB = (respuestas.equipoB?.[rKey] || []).filter(r => r === "Correcta").length;
 
-    state.aciertos_por_ronda[rKey].equipoA = Math.max(state.aciertos_por_ronda[rKey].equipoA || 0, countA);
-    state.aciertos_por_ronda[rKey].equipoB = Math.max(state.aciertos_por_ronda[rKey].equipoB || 0, countB);
+    state.aciertos_por_ronda[rKey].equipoA = countA;
+    state.aciertos_por_ronda[rKey].equipoB = countB;
   });
 
   const activeRound = state.round_activo || 1;
@@ -512,12 +512,7 @@ class TriviaApp {
       }
     }
 
-    // 1. Incrementar aciertos aislados de la ronda activa
-    if (!this.state.aciertos_por_ronda[roundKey]) {
-      this.state.aciertos_por_ronda[roundKey] = { equipoA: 0, equipoB: 0 };
-    }
-    this.state.aciertos_por_ronda[roundKey][key] = (this.state.aciertos_por_ronda[roundKey][key] || 0) + amount;
-
+    // 1. Recalcular aciertos aislados de la ronda activa de forma atómica
     syncAciertosState(this.state);
 
     const currentGoal = ROUND_GOALS[roundNum] || 5;

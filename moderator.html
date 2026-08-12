@@ -434,8 +434,15 @@
             </div>
             ${isCorrect ? '<span class="px-2.5 py-1 bg-emerald-500 text-slate-950 text-xs font-black rounded-lg uppercase shadow-sm">Respuesta Correcta ✓</span>' : '<span class="text-xs text-rose-400/70 font-semibold px-2 py-0.5 rounded bg-rose-950/40 border border-rose-800/40">Incorrecto ✕</span>'}
           `;
-          optDiv.onclick = () => {
-            if (isGameOver) return;
+          optDiv.onclick = (e) => {
+            if (e) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+            if (isGameOver || isProcessingAction) return;
+            isProcessingAction = true;
+            setTimeout(() => { isProcessingAction = false; }, 400);
+
             if (isCorrect) {
               revealAndPromptScore();
             } else {
@@ -490,6 +497,7 @@
     }
 
     let autoNextTimeout = null;
+    let isProcessingAction = false;
 
     function scheduleAutoNextQuestion(delayMs = 1800) {
       cancelAutoNextQuestion();
@@ -564,10 +572,17 @@
     }
 
     function assignPointToTeam(team) {
-      triviaApp.recordQuestionResult(team);
-      triviaApp.addAcierto(team, 1);
-      closeAssignPointModalOnly();
-      scheduleAutoNextQuestion(1800);
+      if (isProcessingAction) return;
+      isProcessingAction = true;
+      try {
+        triviaApp.addAcierto(team, 1);
+      } finally {
+        closeAssignPointModalOnly();
+        scheduleAutoNextQuestion(1800);
+        setTimeout(() => {
+          isProcessingAction = false;
+        }, 500);
+      }
     }
 
     // Modal: Reset PIN
