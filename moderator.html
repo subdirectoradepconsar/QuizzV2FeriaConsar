@@ -311,7 +311,7 @@
   <script src="questions.js"></script>
   <script src="app.js"></script>
   <script>
-    const GOALS = { 1: 1, 2: 1, 3: 1 };
+    const GOALS = { 1: 1, 2: 5, 3: 4 };
     let currentState = null;
     let victoryModalDismissed = false;
 
@@ -331,7 +331,7 @@
       const currentQuestion = questionsList[qIdx] || { question: "Cargando pregunta...", options: [], correct: 0, explanation: "" };
 
       const roundActivo = currentState.round_activo || 1;
-      const currentGoal = GOALS[roundActivo] || 1;
+      const currentGoal = GOALS[roundActivo] || (roundActivo === 1 ? 1 : (roundActivo === 2 ? 5 : 4));
 
       const equipoA_Aciertos = currentState.aciertos_round ? (currentState.aciertos_round.equipoA || 0) : (currentState.scores?.tecnica || 0);
       const equipoB_Aciertos = currentState.aciertos_round ? (currentState.aciertos_round.equipoB || 0) : (currentState.scores?.ruda || 0);
@@ -381,9 +381,9 @@
       const versionContainer = document.getElementById('versionSelectorContainer');
       versionContainer.innerHTML = '';
       const ROUND_INFO = {
-        1: { name: "Round 1", subtitle: "Opción Múltiple (1 acierto)" },
-        2: { name: "Round 2", subtitle: "Verdadero / Falso (10 preguntas)" },
-        3: { name: "Round 3", subtitle: "Abiertas (6 preguntas)" }
+        1: { name: "Round 1", subtitle: "Meta: 1 acierto" },
+        2: { name: "Round 2", subtitle: "Meta: 5 aciertos" },
+        3: { name: "Round 3", subtitle: "Meta: 4 aciertos" }
       };
 
       Object.keys(TRIVIA_QUESTIONS).forEach((vKey, index) => {
@@ -482,54 +482,26 @@
       }
 
       // Render Marcador en Columna Derecha
-      const totalQuestionsInRound = roundActivo === 1 ? 1 : currentVersion.questions.length;
-
       document.getElementById('caidasTecnica').innerText = `${equipoA_Rounds} Rounds`;
       document.getElementById('caidasRuda').innerText = `${equipoB_Rounds} Rounds`;
       
-      const phaseNames = {
-        1: "Opción Múltiple (1 acierto para ganar round)",
-        2: "Verdadero / Falso (10 preguntas • Mayoría de aciertos)",
-        3: "Preguntas Abiertas (6 preguntas • Caída definitiva)"
-      };
+      document.getElementById('scoreTecnicaText').innerText = `Aciertos: ${equipoA_Aciertos} / ${currentGoal}`;
+      document.getElementById('scoreRudaText').innerText = `Aciertos: ${equipoB_Aciertos} / ${currentGoal}`;
+      document.getElementById('modRoundGoalTag').innerText = `Round ${roundActivo} • Meta: ${currentGoal} aciertos`;
 
-      document.getElementById('scoreTecnicaText').innerText = `Aciertos en Round: ${equipoA_Aciertos} / ${totalQuestionsInRound}`;
-      document.getElementById('scoreRudaText').innerText = `Aciertos en Round: ${equipoB_Aciertos} / ${totalQuestionsInRound}`;
-
-      if (roundActivo === 1) {
-        document.getElementById('modRoundGoalTag').innerText = "Round 1 • 1 acierto para ganar round";
-      } else if (roundActivo === 2) {
-        document.getElementById('modRoundGoalTag').innerText = "Round 2 (10 preguntas) • Mayoría de aciertos";
-      } else {
-        document.getElementById('modRoundGoalTag').innerText = "Round 3 (6 preguntas) • Caída definitiva";
-      }
-
-      // Círculos de Progreso Moderador (R1, R2, R3)
-      renderProgressDots('modDotsTecnica', equipoA_Rounds, 'tecnica');
-      renderProgressDots('modDotsRuda', equipoB_Rounds, 'ruda');
+      // Mini-Marcador de Aciertos (1 en R1, 5 en R2, 4 en R3)
+      renderProgressDots('modDotsTecnica', equipoA_Aciertos, currentGoal, 'tecnica');
+      renderProgressDots('modDotsRuda', equipoB_Aciertos, currentGoal, 'ruda');
     }
 
-    function renderProgressDots(containerId, roundsWon, teamClass) {
+    function renderProgressDots(containerId, count, goal, teamClass) {
       const container = document.getElementById(containerId);
       if (!container) return;
       container.innerHTML = '';
-      const labels = ['R1: Opción Múltiple', 'R2: V/F', 'R3: Abiertas'];
-      for (let i = 1; i <= 3; i++) {
-        const isWon = i <= roundsWon;
-        const dotWrapper = document.createElement('div');
-        dotWrapper.className = 'flex flex-col items-center gap-0.5';
-        
+      for (let i = 0; i < goal; i++) {
         const dot = document.createElement('span');
-        dot.className = `progress-dot ${isWon ? `progress-dot-${teamClass}-active` : ''}`;
-        dot.title = labels[i - 1];
-        
-        const label = document.createElement('span');
-        label.className = `text-[9px] font-extrabold uppercase ${isWon ? (teamClass === 'tecnica' ? 'text-sky-300' : 'text-rose-300') : 'text-slate-500'}`;
-        label.innerText = `R${i}`;
-
-        dotWrapper.appendChild(dot);
-        dotWrapper.appendChild(label);
-        container.appendChild(dotWrapper);
+        dot.className = `progress-dot ${i < count ? `progress-dot-${teamClass}-active` : ''}`;
+        container.appendChild(dot);
       }
     }
 

@@ -5,9 +5,9 @@
  */
 
 const ROUND_GOALS = {
-  1: 1, // Round 1 (Opción Múltiple): 1 acierto para avanzar a Round 2
-  2: 1, // Round 2 (Verdadero / Falso): 1 acierto para avanzar a Round 3
-  3: 1  // Round 3 (Preguntas Abiertas): 1 acierto para ganar el Gran Combate (3/3)
+  1: 1, // Round 1 (Opción Múltiple): 1 acierto para ganar round y avanzar a Round 2
+  2: 5, // Round 2 (Verdadero / Falso): 5 aciertos para ganar round y avanzar a Round 3
+  3: 4  // Round 3 (Preguntas Abiertas): 4 aciertos para ganar el Gran Combate (3-0)
 };
 
 const DEFAULT_RESPUESTAS = () => ({
@@ -584,50 +584,109 @@ class TriviaApp {
     syncAciertosState(this.state);
 
     const totalQuestionsInRound = TRIVIA_QUESTIONS[this.state.versionId]?.questions?.length || (roundNum === 1 ? 8 : (roundNum === 2 ? 10 : 6));
+    const currentGoal = ROUND_GOALS[roundNum] || (roundNum === 1 ? 1 : (roundNum === 2 ? 5 : 4));
+    const teamScoreInRound = this.state.aciertos_round[key] || 0;
 
-    // ROUND 1: Pase directo con 1 solo acierto a Ronda 2
-    if (roundNum === 1) {
-      this.state.juego_terminado = false;
-      this.state.equipoGanador = null;
+    // Evaluación de Meta de Aciertos del Round (1 en R1, 5 en R2, 4 en R3)
+    if (teamScoreInRound >= currentGoal) {
       this.state.marcador_global[key] = (this.state.marcador_global[key] || 0) + 1;
       this.state.caidas[key === 'equipoA' ? 'tecnica' : 'ruda'] = this.state.marcador_global[key];
 
-      this.playBellSound();
-      this.triggerConfetti();
+      if (roundNum === 1) {
+        // Gana Round 1 -> Marcador 1-0 -> Pasa a Round 2
+        this.state.juego_terminado = false;
+        this.state.equipoGanador = null;
 
-      const siguienteRoundNum = 2;
-      const evt = {
-        type: "ROUND_GANADO",
-        action: "ROUND_GANADO",
-        team: key,
-        teamName: teamDisplayName,
-        roundGanado: 1,
-        siguienteRound: siguienteRoundNum,
-        questionIndex: 0
-      };
+        this.playBellSound();
+        this.triggerConfetti();
 
-      this.state.round_activo = siguienteRoundNum;
-      this.state.versionId = `version${siguienteRoundNum}`;
-      this.state.questionIndex = 0;
-      if (!this.state.question_index_por_ronda) {
-        this.state.question_index_por_ronda = DEFAULT_QUESTION_INDEX_POR_RONDA();
+        const siguienteRoundNum = 2;
+        const evt = {
+          type: "ROUND_GANADO",
+          action: "ROUND_GANADO",
+          team: key,
+          teamName: teamDisplayName,
+          roundGanado: 1,
+          siguienteRound: siguienteRoundNum,
+          questionIndex: 0
+        };
+
+        this.state.round_activo = siguienteRoundNum;
+        this.state.versionId = `version${siguienteRoundNum}`;
+        this.state.questionIndex = 0;
+        if (!this.state.question_index_por_ronda) {
+          this.state.question_index_por_ronda = DEFAULT_QUESTION_INDEX_POR_RONDA();
+        }
+        this.state.question_index_por_ronda[`ronda${siguienteRoundNum}`] = 0;
+        this.state.isAnswerRevealed = false;
+        this.state.isQuestionVisible = true;
+
+        syncAciertosState(this.state);
+        this.saveAndSyncState(evt);
+        return;
+      } else if (roundNum === 2) {
+        // Gana Round 2 con 5 aciertos -> Marcador 2-0 -> Pasa a Round 3
+        this.state.juego_terminado = false;
+        this.state.equipoGanador = null;
+
+        this.playBellSound();
+        this.triggerConfetti();
+
+        const siguienteRoundNum = 3;
+        const evt = {
+          type: "ROUND_GANADO",
+          action: "ROUND_GANADO",
+          team: key,
+          teamName: teamDisplayName,
+          roundGanado: 2,
+          siguienteRound: siguienteRoundNum,
+          questionIndex: 0
+        };
+
+        this.state.round_activo = siguienteRoundNum;
+        this.state.versionId = `version${siguienteRoundNum}`;
+        this.state.questionIndex = 0;
+        if (!this.state.question_index_por_ronda) {
+          this.state.question_index_por_ronda = DEFAULT_QUESTION_INDEX_POR_RONDA();
+        }
+        this.state.question_index_por_ronda[`ronda${siguienteRoundNum}`] = 0;
+        this.state.isAnswerRevealed = false;
+        this.state.isQuestionVisible = true;
+
+        syncAciertosState(this.state);
+        this.saveAndSyncState(evt);
+        return;
+      } else if (roundNum >= 3 || this.state.marcador_global[key] >= 3) {
+        // Gana Round 3 con 4 aciertos -> Marcador 3-0 -> VICTORIA DEFINITIVA
+        this.state.juego_terminado = true;
+        this.state.equipoGanador = teamDisplayName;
+
+        this.playMultipleBellStrikes();
+        this.triggerConfetti();
+
+        const evt = {
+          type: "VICTORIA_GLOBAL",
+          action: "VICTORIA_GLOBAL",
+          team: key,
+          equipoGanador: teamDisplayName,
+          teamName: teamDisplayName,
+          round: 3,
+          roundsGanados: this.state.marcador_global[key]
+        };
+
+        this.saveAndSyncState(evt);
+        this.sendWebhookPost();
+        return;
       }
-      this.state.question_index_por_ronda[`ronda${siguienteRoundNum}`] = 0;
-      this.state.isAnswerRevealed = false;
-      this.state.isQuestionVisible = true;
-
-      syncAciertosState(this.state);
-      this.saveAndSyncState(evt);
-      return;
     }
 
-    // ROUND 2 & ROUND 3: Acumulación de aciertos sin corte anticipado
+    // Si aún no se alcanza la meta del round:
     const isLastQuestion = qIdx >= totalQuestionsInRound - 1;
 
     if (isLastQuestion) {
       this.evaluateEndOfRound(roundNum, key);
     } else {
-      // Pregunta regular en Ronda 2 o Ronda 3: acumula punto y continúa
+      // Pregunta regular en Ronda 2 o Ronda 3: acumula punto en mini-marcador y continúa
       this.playPointSound();
       const evt = {
         type: "ADD_POINT",

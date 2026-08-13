@@ -211,7 +211,7 @@
   <script src="questions.js"></script>
   <script src="app.js"></script>
   <script>
-    const GOALS = { 1: 1, 2: 1, 3: 1 };
+    const GOALS = { 1: 1, 2: 5, 3: 4 };
     let lastState = null;
     let prevAciertos = { equipoA: 0, equipoB: 0 };
     let prevRounds = { equipoA: 0, equipoB: 0 };
@@ -234,11 +234,12 @@
       const currentQuestion = questionsList[qIdx] || { question: "Cargando pregunta...", options: [], correct: 0, explanation: "" };
 
       const roundActivo = state.round_activo || 1;
+      const currentGoal = GOALS[roundActivo] || (roundActivo === 1 ? 1 : (roundActivo === 2 ? 5 : 4));
 
       const roundTitles = {
-        1: "ROUND 1 • Opción Múltiple (1 acierto para ganar round)",
-        2: "ROUND 2 • Verdadero / Falso (10 preguntas • Mayoría de aciertos)",
-        3: "ROUND 3 • Preguntas Abiertas (6 preguntas • Caída definitiva)"
+        1: "ROUND 1 • Opción Múltiple (Meta: 1 acierto)",
+        2: "ROUND 2 • Verdadero / Falso (Meta: 5 aciertos)",
+        3: "ROUND 3 • Preguntas Abiertas (Meta: 4 aciertos)"
       };
 
       const equipoA_Aciertos = state.aciertos_round ? (state.aciertos_round.equipoA || 0) : (state.scores?.tecnica || 0);
@@ -253,9 +254,9 @@
       document.getElementById('caidasRuda').innerText = `${equipoB_Rounds} Rounds`;
       document.getElementById('roundGoalBadge').innerText = roundTitles[roundActivo] || `ROUND ${roundActivo}`;
 
-      // Render Indicadores de Rounds Ganados (R1, R2, R3)
-      renderProgressDots('dotsTecnica', equipoA_Rounds, 'tecnica');
-      renderProgressDots('dotsRuda', equipoB_Rounds, 'ruda');
+      // Render Mini-Marcador de Aciertos del Round Activo (1 en R1, 5 en R2, 4 en R3)
+      renderProgressDots('dotsTecnica', equipoA_Aciertos, currentGoal, 'tecnica');
+      renderProgressDots('dotsRuda', equipoB_Aciertos, currentGoal, 'ruda');
 
       // Acciones y Animaciones
       if (actionEvent) {
@@ -418,27 +419,14 @@
       }
     }
 
-    function renderProgressDots(containerId, roundsWon, teamClass) {
+    function renderProgressDots(containerId, count, goal, teamClass) {
       const container = document.getElementById(containerId);
       if (!container) return;
       container.innerHTML = '';
-      const labels = ['R1: Opción Múltiple', 'R2: V/F', 'R3: Abiertas'];
-      for (let i = 1; i <= 3; i++) {
-        const isWon = i <= roundsWon;
-        const dotWrapper = document.createElement('div');
-        dotWrapper.className = 'flex flex-col items-center gap-0.5';
-        
+      for (let i = 0; i < goal; i++) {
         const dot = document.createElement('span');
-        dot.className = `progress-dot ${isWon ? `progress-dot-${teamClass}-active` : ''}`;
-        dot.title = labels[i - 1];
-        
-        const label = document.createElement('span');
-        label.className = `text-[9px] font-extrabold uppercase ${isWon ? (teamClass === 'tecnica' ? 'text-sky-300' : 'text-rose-300') : 'text-slate-500'}`;
-        label.innerText = `R${i}`;
-
-        dotWrapper.appendChild(dot);
-        dotWrapper.appendChild(label);
-        container.appendChild(dotWrapper);
+        dot.className = `progress-dot ${i < count ? `progress-dot-${teamClass}-active` : ''}`;
+        container.appendChild(dot);
       }
     }
 
