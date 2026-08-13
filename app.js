@@ -5,9 +5,9 @@
  */
 
 const ROUND_GOALS = {
-  1: 5, // Round 1: Meta 5 aciertos (de 8 preguntas)
-  2: 6, // Round 2: Meta 6 aciertos (de 10 preguntas)
-  3: 4  // Round 3: Meta 4 aciertos (de 6 preguntas)
+  1: 1, // Round 1 (Opción Múltiple): 1 acierto para avanzar a Round 2
+  2: 1, // Round 2 (Verdadero / Falso): 1 acierto para avanzar a Round 3
+  3: 1  // Round 3 (Preguntas Abiertas): 1 acierto para ganar el Gran Combate (3/3)
 };
 
 const DEFAULT_RESPUESTAS = () => ({
@@ -27,6 +27,12 @@ const DEFAULT_ACIERTOS_POR_RONDA = () => ({
   ronda1: { equipoA: 0, equipoB: 0 },
   ronda2: { equipoA: 0, equipoB: 0 },
   ronda3: { equipoA: 0, equipoB: 0 }
+});
+
+const DEFAULT_QUESTION_INDEX_POR_RONDA = () => ({
+  ronda1: 0,
+  ronda2: 0,
+  ronda3: 0
 });
 
 function syncAciertosState(state) {
@@ -74,6 +80,7 @@ const DEFAULT_STATE = {
   round_activo: 1,
   versionId: "version1",
   questionIndex: 0,
+  question_index_por_ronda: DEFAULT_QUESTION_INDEX_POR_RONDA(),
   isQuestionVisible: true,
   isAnswerRevealed: false,
   juego_terminado: false,
@@ -171,9 +178,9 @@ class TriviaApp {
           if (data) {
             // Maneja la lectura directa de estado_trivia o wrappers
             const incomingState = data.estado_trivia || data.state || data;
-            const actionEvt = data.accion || (data.actionEvent ? data.actionEvent.type : "ACTUALIZAR_MARCADOR");
+            const actionEvt = data.ultimo_evento || data.actionEvent || (typeof data.accion === 'object' ? data.accion : { type: data.accion || "ACTUALIZAR_MARCADOR", action: data.accion || "ACTUALIZAR_MARCADOR" });
             if (incomingState && incomingState.round_activo !== undefined) {
-              this.updateStateLocal(incomingState, false, typeof actionEvt === 'object' ? actionEvt : { type: actionEvt, action: actionEvt });
+              this.updateStateLocal(incomingState, false, actionEvt);
             }
           }
         });
@@ -251,12 +258,17 @@ class TriviaApp {
       },
       respuestas: this.state.respuestas || DEFAULT_RESPUESTAS(),
       versionId: this.state.versionId || "version1",
-      questionIndex: this.state.questionIndex || 0,
+      questionIndex: this.state.questionIndex !== undefined ? this.state.questionIndex : 0,
+      question_index_por_ronda: this.state.question_index_por_ronda || DEFAULT_QUESTION_INDEX_POR_RONDA(),
       isQuestionVisible: this.state.isQuestionVisible !== undefined ? this.state.isQuestionVisible : true,
       isAnswerRevealed: this.state.isAnswerRevealed !== undefined ? this.state.isAnswerRevealed : false,
       juego_terminado: this.state.juego_terminado || false,
       equipoGanador: this.state.equipoGanador || null,
       accion: actionStr,
+      ultimo_evento: typeof actionEvent === 'object' && actionEvent !== null ? actionEvent : {
+        type: actionStr,
+        action: actionStr
+      },
       timestamp: this.state.timestamp
     };
 
@@ -295,6 +307,8 @@ class TriviaApp {
   }
 
   updateStateLocal(newState, doSync = true, actionEvent = null) {
+    const prevRound = this.state.round_activo;
+
     if (newState.marcador_global) {
       this.state.marcador_global = { ...newState.marcador_global };
     }
@@ -321,17 +335,60 @@ class TriviaApp {
       this.state.webhookSentForId = newState.webhookSentForId;
     }
 
-    this.state = { ...this.state, ...newState };
+    if (newState.round_activo !== undefined) {
+      this.state.round_activo = newState.round_activo;
+      this.state.versionId = `version${newState.round_activo}`;
+    } else if (newState.versionId) {
+      this.state.versionId = newState.versionId;
+      const match = newState.versionId.match(/\d+/);
+      if (match) this.state.round_activo = parseInt(match[0]);
+    }
+
+    if (newState.question_index_por_ronda) {
+      this.state.question_index_por_ronda = {
+        ...DEFAULT_QUESTION_INDEX_POR_RONDA(),
+        ...newState.question_index_por_ronda
+      };
+    } else if (!this.state.question_index_por_ronda) {
+      this.state.question_index_por_ronda = DEFAULT_QUESTION_INDEX_POR_RONDA();
+    }
+
+    const currentRound = this.state.round_activo || 1;
+    const roundChanged = (prevRound !== undefined && prevRound !== currentRound);
+
+    if (roundChanged) {
+      // Al cambiar de ronda, siempre reiniciar el índice de pregunta a 0
+      this.state.questionIndex = 0;
+      this.state.question_index_por_ronda[`ronda${currentRound}`] = 0;
+    } else if (newState.questionIndex !== undefined) {
+      this.state.questionIndex = newState.questionIndex;
+      this.state.question_index_por_ronda[`ronda${currentRound}`] = newState.questionIndex;
+    }
+
+    if (newState.isQuestionVisible !== undefined) {
+      this.state.isQuestionVisible = newState.isQuestionVisible;
+    }
+    if (newState.isAnswerRevealed !== undefined) {
+      this.state.isAnswerRevealed = newState.isAnswerRevealed;
+    }
+    if (newState.juego_terminado !== undefined) {
+      this.state.juego_terminado = newState.juego_terminado;
+    }
+    if (newState.equipoGanador !== undefined) {
+      this.state.equipoGanador = newState.equipoGanador;
+    }
+    if (newState.scores) {
+      this.state.scores = { ...newState.scores };
+    }
+    if (newState.caidas) {
+      this.state.caidas = { ...newState.caidas };
+    }
+    if (newState.timestamp) {
+      this.state.timestamp = newState.timestamp;
+    }
 
     if (!this.state.marcador_global) this.state.marcador_global = { equipoA: 0, equipoB: 0 };
     if (!this.state.respuestas) this.state.respuestas = DEFAULT_RESPUESTAS();
-
-    if (this.state.round_activo) {
-      this.state.versionId = `version${this.state.round_activo}`;
-    } else if (this.state.versionId) {
-      const match = this.state.versionId.match(/\d+/);
-      if (match) this.state.round_activo = parseInt(match[0]);
-    }
 
     syncAciertosState(this.state);
 
@@ -361,12 +418,16 @@ class TriviaApp {
       this.state.round_activo = roundNum;
       this.state.versionId = `version${roundNum}`;
       this.state.questionIndex = 0;
+      if (!this.state.question_index_por_ronda) {
+        this.state.question_index_por_ronda = DEFAULT_QUESTION_INDEX_POR_RONDA();
+      }
+      this.state.question_index_por_ronda[`ronda${roundNum}`] = 0;
       this.state.isAnswerRevealed = false;
       this.state.isQuestionVisible = true;
 
       syncAciertosState(this.state);
 
-      this.saveAndSyncState({ type: "SET_ROUND", action: "ACTUALIZAR_MARCADOR", round_activo: roundNum });
+      this.saveAndSyncState({ type: "SET_ROUND", action: "ACTUALIZAR_MARCADOR", round_activo: roundNum, questionIndex: 0 });
     }
   }
 
@@ -377,17 +438,24 @@ class TriviaApp {
     } else {
       this.state.versionId = versionId;
       this.state.questionIndex = 0;
+      if (!this.state.question_index_por_ronda) {
+        this.state.question_index_por_ronda = DEFAULT_QUESTION_INDEX_POR_RONDA();
+      }
       this.state.isAnswerRevealed = false;
       this.state.isQuestionVisible = true;
       syncAciertosState(this.state);
-      this.saveAndSyncState({ type: "SET_VERSION", action: "ACTUALIZAR_MARCADOR", versionId });
+      this.saveAndSyncState({ type: "SET_VERSION", action: "ACTUALIZAR_MARCADOR", versionId, questionIndex: 0 });
     }
   }
 
   setQuestionIndex(index) {
-    const currentQuestions = TRIVIA_QUESTIONS[this.state.versionId].questions;
+    const currentQuestions = TRIVIA_QUESTIONS[this.state.versionId]?.questions || [];
     if (index >= 0 && index < currentQuestions.length) {
       this.state.questionIndex = index;
+      if (!this.state.question_index_por_ronda) {
+        this.state.question_index_por_ronda = DEFAULT_QUESTION_INDEX_POR_RONDA();
+      }
+      this.state.question_index_por_ronda[`ronda${this.state.round_activo || 1}`] = index;
       this.state.isAnswerRevealed = false;
       this.state.isQuestionVisible = true;
       this.saveAndSyncState({ type: "CHANGE_QUESTION", action: "ACTUALIZAR_MARCADOR", index });
@@ -512,61 +580,54 @@ class TriviaApp {
       }
     }
 
-    // 1. Recalcular aciertos aislados de la ronda activa de forma atómica
+    // 1. Recalcular aciertos de la ronda activa de forma atómica
     syncAciertosState(this.state);
 
-    const currentGoal = ROUND_GOALS[roundNum] || 5;
+    const totalQuestionsInRound = TRIVIA_QUESTIONS[this.state.versionId]?.questions?.length || (roundNum === 1 ? 8 : (roundNum === 2 ? 10 : 6));
 
-    // 2. Evaluación de Meta del Round
-    if (this.state.aciertos_round[key] >= currentGoal) {
+    // ROUND 1: Pase directo con 1 solo acierto a Ronda 2
+    if (roundNum === 1) {
+      this.state.juego_terminado = false;
+      this.state.equipoGanador = null;
       this.state.marcador_global[key] = (this.state.marcador_global[key] || 0) + 1;
       this.state.caidas[key === 'equipoA' ? 'tecnica' : 'ruda'] = this.state.marcador_global[key];
 
-      if (this.state.marcador_global[key] >= 2) {
-        this.state.juego_terminado = true;
-        this.state.equipoGanador = teamDisplayName;
+      this.playBellSound();
+      this.triggerConfetti();
 
-        this.playMultipleBellStrikes();
-        this.triggerConfetti();
+      const siguienteRoundNum = 2;
+      const evt = {
+        type: "ROUND_GANADO",
+        action: "ROUND_GANADO",
+        team: key,
+        teamName: teamDisplayName,
+        roundGanado: 1,
+        siguienteRound: siguienteRoundNum,
+        questionIndex: 0
+      };
 
-        const evt = {
-          type: "VICTORIA_GLOBAL",
-          action: "VICTORIA_GLOBAL",
-          team: key,
-          equipoGanador: teamDisplayName,
-          teamName: teamDisplayName,
-          round: roundNum
-        };
-        this.saveAndSyncState(evt);
-        this.sendWebhookPost();
-      } else {
-        this.playBellSound();
-        this.triggerConfetti();
-
-        const roundGanadoNum = roundNum;
-        const siguienteRoundNum = Math.min(3, roundGanadoNum + 1);
-
-        const evt = {
-          type: "ROUND_GANADO",
-          action: "ROUND_GANADO",
-          team: key,
-          teamName: teamDisplayName,
-          roundGanado: roundGanadoNum,
-          siguienteRound: siguienteRoundNum
-        };
-
-        // Avanza automáticamente al siguiente Round
-        this.state.round_activo = siguienteRoundNum;
-        this.state.versionId = `version${siguienteRoundNum}`;
-        this.state.questionIndex = 0;
-        this.state.isAnswerRevealed = false;
-        this.state.isQuestionVisible = true;
-
-        syncAciertosState(this.state);
-
-        this.saveAndSyncState(evt);
+      this.state.round_activo = siguienteRoundNum;
+      this.state.versionId = `version${siguienteRoundNum}`;
+      this.state.questionIndex = 0;
+      if (!this.state.question_index_por_ronda) {
+        this.state.question_index_por_ronda = DEFAULT_QUESTION_INDEX_POR_RONDA();
       }
+      this.state.question_index_por_ronda[`ronda${siguienteRoundNum}`] = 0;
+      this.state.isAnswerRevealed = false;
+      this.state.isQuestionVisible = true;
+
+      syncAciertosState(this.state);
+      this.saveAndSyncState(evt);
+      return;
+    }
+
+    // ROUND 2 & ROUND 3: Acumulación de aciertos sin corte anticipado
+    const isLastQuestion = qIdx >= totalQuestionsInRound - 1;
+
+    if (isLastQuestion) {
+      this.evaluateEndOfRound(roundNum, key);
     } else {
+      // Pregunta regular en Ronda 2 o Ronda 3: acumula punto y continúa
       this.playPointSound();
       const evt = {
         type: "ADD_POINT",
@@ -576,6 +637,81 @@ class TriviaApp {
         amount
       };
       this.saveAndSyncState(evt);
+    }
+  }
+
+  evaluateEndOfRound(roundNum, lastScoringKey = null) {
+    const scoreA = this.state.aciertos_round?.equipoA || 0;
+    const scoreB = this.state.aciertos_round?.equipoB || 0;
+
+    let roundWinnerKey = null;
+    let roundWinnerName = "Esquina Técnica";
+    if (scoreA > scoreB) {
+      roundWinnerKey = 'equipoA';
+      roundWinnerName = 'Esquina Técnica';
+    } else if (scoreB > scoreA) {
+      roundWinnerKey = 'equipoB';
+      roundWinnerName = 'Esquina Ruda';
+    } else {
+      roundWinnerKey = lastScoringKey || 'equipoA';
+      roundWinnerName = roundWinnerKey === 'equipoA' ? 'Esquina Técnica' : 'Esquina Ruda';
+    }
+
+    // Incrementa el marcador global de Rounds ganados (1 - 0 -> 2 - 0 -> 3 - 0)
+    this.state.marcador_global[roundWinnerKey] = (this.state.marcador_global[roundWinnerKey] || 0) + 1;
+    this.state.caidas[roundWinnerKey === 'equipoA' ? 'tecnica' : 'ruda'] = this.state.marcador_global[roundWinnerKey];
+
+    if (roundNum === 2) {
+      // Fin de Round 2 por mayoría de aciertos -> Marcador avanza a 2 - 0 -> Avanza a Round 3 (Abiertas)
+      this.playBellSound();
+      this.triggerConfetti();
+
+      const siguienteRoundNum = 3;
+      const evt = {
+        type: "ROUND_GANADO",
+        action: "ROUND_GANADO",
+        team: roundWinnerKey,
+        teamName: roundWinnerName,
+        roundGanado: 2,
+        siguienteRound: siguienteRoundNum,
+        questionIndex: 0,
+        scoreA,
+        scoreB
+      };
+
+      this.state.round_activo = siguienteRoundNum;
+      this.state.versionId = `version${siguienteRoundNum}`;
+      this.state.questionIndex = 0;
+      if (!this.state.question_index_por_ronda) {
+        this.state.question_index_por_ronda = DEFAULT_QUESTION_INDEX_POR_RONDA();
+      }
+      this.state.question_index_por_ronda[`ronda${siguienteRoundNum}`] = 0;
+      this.state.isAnswerRevealed = false;
+      this.state.isQuestionVisible = true;
+
+      syncAciertosState(this.state);
+      this.saveAndSyncState(evt);
+    } else if (roundNum >= 3 || this.state.marcador_global[roundWinnerKey] >= 3) {
+      // Fin de Round 3 -> Marcador llega a 3 - 0 -> VICTORIA GLOBAL (Ganador de la Partida)
+      this.state.juego_terminado = true;
+      this.state.equipoGanador = roundWinnerName;
+
+      this.playMultipleBellStrikes();
+      this.triggerConfetti();
+
+      const evt = {
+        type: "VICTORIA_GLOBAL",
+        action: "VICTORIA_GLOBAL",
+        team: roundWinnerKey,
+        equipoGanador: roundWinnerName,
+        teamName: roundWinnerName,
+        round: 3,
+        scoreA,
+        scoreB,
+        roundsGanados: this.state.marcador_global[roundWinnerKey]
+      };
+      this.saveAndSyncState(evt);
+      this.sendWebhookPost();
     }
   }
 
@@ -599,8 +735,21 @@ class TriviaApp {
       }
     });
 
-    this.playBuzzerSound();
-    this.saveAndSyncState({ type: "TRIGGER_INCORRECT", action: "ACTUALIZAR_MARCADOR" });
+    syncAciertosState(this.state);
+
+    const totalQuestionsInRound = TRIVIA_QUESTIONS[this.state.versionId]?.questions?.length || (roundNum === 1 ? 8 : (roundNum === 2 ? 10 : 6));
+    const isLastQuestion = qIdx >= totalQuestionsInRound - 1;
+
+    if (roundNum > 1 && isLastQuestion) {
+      this.evaluateEndOfRound(roundNum, null);
+    } else {
+      this.saveAndSyncState({
+        type: "TRIGGER_INCORRECT",
+        action: "ACTUALIZAR_MARCADOR",
+        round: roundNum,
+        questionIndex: qIdx
+      });
+    }
   }
 
   ringBell() {
@@ -707,6 +856,7 @@ class TriviaApp {
     this.state.scores = { tecnica: 0, ruda: 0 };
     this.state.caidas = { tecnica: 0, ruda: 0 };
     this.state.questionIndex = 0;
+    this.state.question_index_por_ronda = DEFAULT_QUESTION_INDEX_POR_RONDA();
     this.state.isAnswerRevealed = false;
     this.state.isQuestionVisible = true;
     this.state.juego_terminado = false;

@@ -172,7 +172,7 @@
         <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
           <div>
             <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Marcador Global</h3>
-            <span class="text-[11px] text-slate-400 font-normal" id="modRoundGoalTag">Meta: 5 aciertos</span>
+            <span class="text-[11px] text-slate-400 font-normal" id="modRoundGoalTag">Meta: 1 acierto</span>
           </div>
           <!-- Botón Discreto de Reset con Confirmación PIN -->
           <button onclick="openResetModal()" title="Reiniciar Marcador y Rounds" class="px-2.5 py-1.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/50 text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 shadow-sm">
@@ -190,13 +190,13 @@
               <span class="text-xs font-black uppercase text-sky-400 tracking-wider">Esquina Técnica</span>
               
               <!-- Marcador Global de Rounds -->
-              <div class="text-2xl font-black text-amber-400 mt-1 mb-0.5" id="caidasTecnica">0 Rounds</div>
+              <div class="text-2xl font-black text-amber-400 mt-1 mb-0.5" id="caidasTecnica">0 / 3 Rounds</div>
               
               <!-- Aciertos del Round Activo -->
-              <div class="text-xs font-bold text-sky-200 mb-1.5" id="scoreTecnicaText">Aciertos: 0/5</div>
+              <div class="text-xs font-bold text-sky-200 mb-1.5" id="scoreTecnicaText">Fase 1: Opción Múltiple</div>
               
               <!-- Círculos de Progreso -->
-              <div class="flex items-center justify-center gap-1.5 my-1" id="modDotsTecnica">
+              <div class="flex items-center justify-center gap-2 my-1" id="modDotsTecnica">
                 <!-- Generado dinámicamente -->
               </div>
             </div>
@@ -208,13 +208,13 @@
               <span class="text-xs font-black uppercase text-rose-400 tracking-wider">Esquina Ruda</span>
               
               <!-- Marcador Global de Rounds -->
-              <div class="text-2xl font-black text-amber-400 mt-1 mb-0.5" id="caidasRuda">0 Rounds</div>
+              <div class="text-2xl font-black text-amber-400 mt-1 mb-0.5" id="caidasRuda">0 / 3 Rounds</div>
               
               <!-- Aciertos del Round Activo -->
-              <div class="text-xs font-bold text-rose-200 mb-1.5" id="scoreRudaText">Aciertos: 0/5</div>
+              <div class="text-xs font-bold text-rose-200 mb-1.5" id="scoreRudaText">Fase 1: Opción Múltiple</div>
               
               <!-- Círculos de Progreso -->
-              <div class="flex items-center justify-center gap-1.5 my-1" id="modDotsRuda">
+              <div class="flex items-center justify-center gap-2 my-1" id="modDotsRuda">
                 <!-- Generado dinámicamente -->
               </div>
             </div>
@@ -311,7 +311,7 @@
   <script src="questions.js"></script>
   <script src="app.js"></script>
   <script>
-    const GOALS = { 1: 5, 2: 6, 3: 4 };
+    const GOALS = { 1: 1, 2: 1, 3: 1 };
     let currentState = null;
     let victoryModalDismissed = false;
 
@@ -326,10 +326,12 @@
       if (!currentState) return;
 
       const currentVersion = TRIVIA_QUESTIONS[currentState.versionId] || TRIVIA_QUESTIONS.version1;
-      const currentQuestion = currentVersion.questions[currentState.questionIndex || 0];
+      const questionsList = currentVersion.questions || [];
+      const qIdx = Math.min(Math.max(0, currentState.questionIndex || 0), Math.max(0, questionsList.length - 1));
+      const currentQuestion = questionsList[qIdx] || { question: "Cargando pregunta...", options: [], correct: 0, explanation: "" };
 
       const roundActivo = currentState.round_activo || 1;
-      const currentGoal = GOALS[roundActivo] || 5;
+      const currentGoal = GOALS[roundActivo] || 1;
 
       const equipoA_Aciertos = currentState.aciertos_round ? (currentState.aciertos_round.equipoA || 0) : (currentState.scores?.tecnica || 0);
       const equipoB_Aciertos = currentState.aciertos_round ? (currentState.aciertos_round.equipoB || 0) : (currentState.scores?.ruda || 0);
@@ -346,7 +348,7 @@
       }
 
       if (isGameOver && !victoryModalDismissed) {
-        const winner = currentState.equipoGanador || (equipoA_Rounds >= 2 ? 'Esquina Técnica' : 'Esquina Ruda');
+        const winner = currentState.equipoGanador || (equipoA_Rounds >= 3 ? 'Esquina Técnica' : 'Esquina Ruda');
         document.getElementById('modVictoryWinnerName').innerText = winner;
         document.getElementById('modVictoryMatchIdText').innerText = `Partida: ${currentState.idPartida || "PART-001"}`;
         if (modVictoryModal) {
@@ -378,6 +380,12 @@
       // 1. Selector de Round / Versión
       const versionContainer = document.getElementById('versionSelectorContainer');
       versionContainer.innerHTML = '';
+      const ROUND_INFO = {
+        1: { name: "Round 1", subtitle: "Opción Múltiple (1 acierto)" },
+        2: { name: "Round 2", subtitle: "Verdadero / Falso (10 preguntas)" },
+        3: { name: "Round 3", subtitle: "Abiertas (6 preguntas)" }
+      };
+
       Object.keys(TRIVIA_QUESTIONS).forEach((vKey, index) => {
         const v = TRIVIA_QUESTIONS[vKey];
         const roundNum = index + 1;
@@ -390,9 +398,10 @@
             ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md font-extrabold active:scale-95' 
             : 'bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700 active:scale-95')
         }`;
+        const info = ROUND_INFO[roundNum] || { name: `Round ${roundNum}`, subtitle: "" };
         btn.innerHTML = `
-          <div class="font-extrabold text-sm mb-0.5">Round ${roundNum}</div>
-          <div class="text-[10px] opacity-80">Meta: ${GOALS[roundNum]} aciertos</div>
+          <div class="font-extrabold text-sm mb-0.5">${info.name}</div>
+          <div class="text-[10px] opacity-80">${info.subtitle}</div>
         `;
         btn.onclick = () => { cancelAutoNextQuestion(); triviaApp.setRound(roundNum); };
         versionContainer.appendChild(btn);
@@ -473,26 +482,54 @@
       }
 
       // Render Marcador en Columna Derecha
-      document.getElementById('caidasTecnica').innerText = `${equipoA_Rounds} Round${equipoA_Rounds !== 1 ? 's' : ''}`;
-      document.getElementById('caidasRuda').innerText = `${equipoB_Rounds} Round${equipoB_Rounds !== 1 ? 's' : ''}`;
-      
-      document.getElementById('scoreTecnicaText').innerText = `Aciertos: ${equipoA_Aciertos}/${currentGoal}`;
-      document.getElementById('scoreRudaText').innerText = `Aciertos: ${equipoB_Aciertos}/${currentGoal}`;
-      document.getElementById('modRoundGoalTag').innerText = `Round ${roundActivo} • Meta: ${currentGoal} aciertos`;
+      const totalQuestionsInRound = roundActivo === 1 ? 1 : currentVersion.questions.length;
 
-      // Círculos de Progreso Moderador
-      renderProgressDots('modDotsTecnica', equipoA_Aciertos, currentGoal, 'tecnica');
-      renderProgressDots('modDotsRuda', equipoB_Aciertos, currentGoal, 'ruda');
+      document.getElementById('caidasTecnica').innerText = `${equipoA_Rounds} Rounds`;
+      document.getElementById('caidasRuda').innerText = `${equipoB_Rounds} Rounds`;
+      
+      const phaseNames = {
+        1: "Opción Múltiple (1 acierto para ganar round)",
+        2: "Verdadero / Falso (10 preguntas • Mayoría de aciertos)",
+        3: "Preguntas Abiertas (6 preguntas • Caída definitiva)"
+      };
+
+      document.getElementById('scoreTecnicaText').innerText = `Aciertos en Round: ${equipoA_Aciertos} / ${totalQuestionsInRound}`;
+      document.getElementById('scoreRudaText').innerText = `Aciertos en Round: ${equipoB_Aciertos} / ${totalQuestionsInRound}`;
+
+      if (roundActivo === 1) {
+        document.getElementById('modRoundGoalTag').innerText = "Round 1 • 1 acierto para ganar round";
+      } else if (roundActivo === 2) {
+        document.getElementById('modRoundGoalTag').innerText = "Round 2 (10 preguntas) • Mayoría de aciertos";
+      } else {
+        document.getElementById('modRoundGoalTag').innerText = "Round 3 (6 preguntas) • Caída definitiva";
+      }
+
+      // Círculos de Progreso Moderador (R1, R2, R3)
+      renderProgressDots('modDotsTecnica', equipoA_Rounds, 'tecnica');
+      renderProgressDots('modDotsRuda', equipoB_Rounds, 'ruda');
     }
 
-    function renderProgressDots(containerId, count, goal, teamClass) {
+    function renderProgressDots(containerId, roundsWon, teamClass) {
       const container = document.getElementById(containerId);
       if (!container) return;
       container.innerHTML = '';
-      for (let i = 0; i < goal; i++) {
+      const labels = ['R1: Opción Múltiple', 'R2: V/F', 'R3: Abiertas'];
+      for (let i = 1; i <= 3; i++) {
+        const isWon = i <= roundsWon;
+        const dotWrapper = document.createElement('div');
+        dotWrapper.className = 'flex flex-col items-center gap-0.5';
+        
         const dot = document.createElement('span');
-        dot.className = `progress-dot ${i < count ? `progress-dot-${teamClass}-active` : ''}`;
-        container.appendChild(dot);
+        dot.className = `progress-dot ${isWon ? `progress-dot-${teamClass}-active` : ''}`;
+        dot.title = labels[i - 1];
+        
+        const label = document.createElement('span');
+        label.className = `text-[9px] font-extrabold uppercase ${isWon ? (teamClass === 'tecnica' ? 'text-sky-300' : 'text-rose-300') : 'text-slate-500'}`;
+        label.innerText = `R${i}`;
+
+        dotWrapper.appendChild(dot);
+        dotWrapper.appendChild(label);
+        container.appendChild(dotWrapper);
       }
     }
 
@@ -574,11 +611,17 @@
     function assignPointToTeam(team) {
       if (isProcessingAction) return;
       isProcessingAction = true;
+      cancelAutoNextQuestion();
+      const prevRound = currentState ? currentState.round_activo : 1;
       try {
         triviaApp.addAcierto(team, 1);
       } finally {
         closeAssignPointModalOnly();
-        scheduleAutoNextQuestion(1800);
+        if (currentState && !currentState.juego_terminado && currentState.round_activo === prevRound) {
+          scheduleAutoNextQuestion(1800);
+        } else {
+          cancelAutoNextQuestion();
+        }
         setTimeout(() => {
           isProcessingAction = false;
         }, 500);
