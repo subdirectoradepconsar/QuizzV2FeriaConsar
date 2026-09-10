@@ -224,27 +224,27 @@ const TRIVIA_QUESTIONS = {
     questions: [
       {
         id: 1,
-        question: "Si el salario mínimo diario es $315.04, ¿cuánto es el salario mínimo mensual considerando 30 días?",
+        question: "¿Cómo se calcula el salario mínimo mensual?",
         options: [],
         correct: null,
-        answer: "$9,451.20 (315.04 × 30)",
-        explanation: "Multiplicando $315.04 × 30 días = $9,451.20 pesos mensuales."
+        answer: "Se multiplica el salario mínimo diario por 30 días.",
+        explanation: "Se multiplica el salario mínimo diario por 30 días."
       },
       {
         id: 2,
-        question: "Ana compra un raspado de $15 todos los días. ¿Cuánto gasta al mes en ese gasto hormiga?",
+        question: "¿Qué es un gasto hormiga?",
         options: [],
         correct: null,
-        answer: "$450.00 (15 × 30)",
-        explanation: "Multiplicando $15 × 30 días del mes = $450.00 pesos al mes."
+        answer: "Es un gasto pequeño y frecuente (como un café, un dulce o un raspado) que parece insignificante, pero que sumado a lo largo del mes puede representar una cantidad considerable de dinero.",
+        explanation: "Es un gasto pequeño y frecuente (como un café, un dulce o un raspado) que parece insignificante, pero que sumado a lo largo del mes puede representar una cantidad considerable de dinero."
       },
       {
         id: 3,
-        question: "Si tu sueldo es de $11,291 mensuales, ¿cuál es tu salario diario? (divide entre 30)",
+        question: "¿Cómo se calcula el salario diario a partir del sueldo mensual?",
         options: [],
         correct: null,
-        answer: "$376.37",
-        explanation: "Dividiendo $11,291 entre 30 días = $376.37 pesos diarios."
+        answer: "Se divide el sueldo mensual entre 30 días.",
+        explanation: "Se divide el sueldo mensual entre 30 días."
       },
       {
         id: 4,
