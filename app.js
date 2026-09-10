@@ -122,8 +122,25 @@ class TriviaApp {
     this.state = this.loadState();
     this.listeners = [];
 
+    // Desactivar reproducción de sonido local si estamos en la interfaz del moderador
+    // para evitar que la campana y efectos se dupliquen/repliquen con la pantalla de proyección.
+    const isModerator = typeof window !== 'undefined' && (
+      window.location.pathname.toLowerCase().includes('moderator') ||
+      window.location.href.toLowerCase().includes('moderator')
+    );
+    this.soundEnabled = !isModerator;
+
     this.initSync();
-    this.initBoxingBellAudio();
+    if (this.soundEnabled) {
+      this.initBoxingBellAudio();
+    }
+  }
+
+  setSoundEnabled(enabled) {
+    this.soundEnabled = !!enabled;
+    if (this.soundEnabled && !this.bellAudio) {
+      this.initBoxingBellAudio();
+    }
   }
 
   initSync() {
@@ -938,6 +955,7 @@ class TriviaApp {
   }
 
   initAudio() {
+    if (!this.soundEnabled) return;
     if (!this.audioCtx) {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (AudioCtx) {
@@ -950,6 +968,7 @@ class TriviaApp {
   }
 
   playBellSound() {
+    if (!this.soundEnabled) return;
     this.initAudio();
 
     if (this.bellAudio) {
@@ -976,10 +995,12 @@ class TriviaApp {
   }
 
   playMultipleBellStrikes() {
+    if (!this.soundEnabled) return;
     this.playBellSound();
   }
 
   playPointSound() {
+    if (!this.soundEnabled) return;
     this.initAudio();
     if (!this.audioCtx) return;
 
@@ -1005,6 +1026,7 @@ class TriviaApp {
   }
 
   playBuzzerSound() {
+    if (!this.soundEnabled) return;
     this.initAudio();
     if (!this.audioCtx) return;
 
@@ -1027,6 +1049,7 @@ class TriviaApp {
   }
 
   playVictorySound() {
+    if (!this.soundEnabled) return;
     this.playBellSound();
   }
 

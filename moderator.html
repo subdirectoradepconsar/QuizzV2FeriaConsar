@@ -316,6 +316,9 @@
     let victoryModalDismissed = false;
 
     window.addEventListener('DOMContentLoaded', () => {
+      // El moderador actúa como control remoto; los efectos de audio (campana, etc.) suenan exclusivamente en la pantalla
+      triviaApp.setSoundEnabled(false);
+
       triviaApp.subscribe((state) => {
         currentState = state;
         renderModeratorUI();
@@ -552,7 +555,6 @@
 
     function revealAndPromptScore() {
       triviaApp.toggleAnswerReveal(true);
-      triviaApp.ringBell();
       openAssignPointModal();
     }
 
