@@ -240,11 +240,11 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <button onclick="assignPointToTeam('tecnica')" class="min-h-[60px] p-4 bg-sky-950 border-2 border-sky-500 rounded-2xl hover:bg-sky-900 active:scale-95 transition-all text-sky-200 font-extrabold text-base flex items-center justify-center gap-3 shadow-lg">
           <span class="text-2xl">🔵</span>
-          <span>Esquina Técnica (+1)</span>
+          <span>Equipo Azul (Técnica) +1</span>
         </button>
         <button onclick="assignPointToTeam('ruda')" class="min-h-[60px] p-4 bg-rose-950 border-2 border-rose-500 rounded-2xl hover:bg-rose-900 active:scale-95 transition-all text-rose-200 font-extrabold text-base flex items-center justify-center gap-3 shadow-lg">
           <span class="text-2xl">🔴</span>
-          <span>Esquina Ruda (+1)</span>
+          <span>Equipo Rojo (Ruda) +1</span>
         </button>
       </div>
 
@@ -422,14 +422,65 @@
 
       if (currentVersion.mode === "open") {
         const openDiv = document.createElement('div');
-        openDiv.className = 'p-4 rounded-xl bg-amber-950/40 border border-amber-500/40 text-amber-200 text-sm leading-relaxed';
+        openDiv.className = 'flex flex-col gap-4';
         openDiv.innerHTML = `
-          <div class="font-bold text-amber-400 mb-1 flex items-center gap-2 text-base">
-            <span>💬</span> Respuesta Oficial de Referencia:
+          <div class="p-4 rounded-xl bg-amber-950/40 border border-amber-500/40 text-amber-200 text-sm leading-relaxed">
+            <div class="font-bold text-amber-400 mb-1 flex items-center gap-2 text-base">
+              <span>💬</span> Respuesta Oficial de Referencia:
+            </div>
+            <div class="text-base text-white font-semibold">${currentQuestion.answer}</div>
           </div>
-          <div class="text-base text-white font-semibold">${currentQuestion.answer}</div>
+
+          <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800">
+            <div class="text-xs font-black uppercase text-amber-300 tracking-wider mb-3 flex items-center justify-between">
+              <span>🎯 Asignar Punto de Pregunta Abierta:</span>
+              <span class="text-[11px] font-normal text-slate-400">Puntúa y revela automáticamente</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button type="button" id="btnScoreAzul" class="min-h-[58px] p-3.5 bg-sky-950/90 border-2 border-sky-500 hover:bg-sky-900/90 active:scale-95 transition-all text-sky-200 font-black rounded-xl text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-lg shadow-sky-950/50 ${isGameOver ? 'opacity-40 cursor-not-allowed' : ''}">
+                <span class="text-2xl">🔵</span>
+                <div class="text-left leading-tight">
+                  <div class="text-xs text-sky-400 uppercase font-bold">Punto para</div>
+                  <div>Equipo Azul (Técnica)</div>
+                </div>
+              </button>
+              
+              <button type="button" id="btnScoreRojo" class="min-h-[58px] p-3.5 bg-rose-950/90 border-2 border-rose-500 hover:bg-rose-900/90 active:scale-95 transition-all text-rose-200 font-black rounded-xl text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-lg shadow-rose-950/50 ${isGameOver ? 'opacity-40 cursor-not-allowed' : ''}">
+                <span class="text-2xl">🔴</span>
+                <div class="text-left leading-tight">
+                  <div class="text-xs text-rose-400 uppercase font-bold">Punto para</div>
+                  <div>Equipo Rojo (Ruda)</div>
+                </div>
+              </button>
+            </div>
+          </div>
         `;
         optionsContainer.appendChild(openDiv);
+
+        const btnAzul = document.getElementById('btnScoreAzul');
+        const btnRojo = document.getElementById('btnScoreRojo');
+
+        if (btnAzul && !isGameOver) {
+          btnAzul.onclick = (e) => {
+            e.preventDefault();
+            if (isGameOver || isProcessingAction) return;
+            if (!currentState.isAnswerRevealed) {
+              triviaApp.toggleAnswerReveal(true);
+            }
+            assignPointToTeam('tecnica');
+          };
+        }
+
+        if (btnRojo && !isGameOver) {
+          btnRojo.onclick = (e) => {
+            e.preventDefault();
+            if (isGameOver || isProcessingAction) return;
+            if (!currentState.isAnswerRevealed) {
+              triviaApp.toggleAnswerReveal(true);
+            }
+            assignPointToTeam('ruda');
+          };
+        }
       } else {
         currentQuestion.options.forEach((optText, idx) => {
           const isCorrect = idx === currentQuestion.correct;
