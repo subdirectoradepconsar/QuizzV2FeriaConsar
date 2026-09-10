@@ -261,36 +261,44 @@
       // Acciones y Animaciones
       if (actionEvent) {
         const type = actionEvent.type || actionEvent.action;
-        const rawTeam = (actionEvent.team || '').toLowerCase();
-        const rawTeamName = actionEvent.teamName || '';
+        const evtId = actionEvent.eventId || (actionEvent.timestamp ? `${type}_${actionEvent.timestamp}` : null);
         
-        let resolvedTeamName = 'Esquina Técnica';
-        if (rawTeam === 'equipoB' || rawTeam === 'ruda' || rawTeam === 'esquinaruda' || rawTeamName === 'Esquina Ruda') {
-          resolvedTeamName = 'Esquina Ruda';
-        } else if (rawTeam === 'equipoa' || rawTeam === 'tecnica' || rawTeam === 'esquinatecnica' || rawTeamName === 'Esquina Técnica') {
-          resolvedTeamName = 'Esquina Técnica';
-        } else if (equipoB_Rounds > equipoA_Rounds) {
-          resolvedTeamName = 'Esquina Ruda';
-        } else {
-          resolvedTeamName = 'Esquina Técnica';
-        }
+        // Evitar procesar el mismo evento dos veces si llega por BroadcastChannel y Firebase
+        const isDuplicateEvent = evtId && (window._lastHandledScreenEventId === evtId);
+        if (!isDuplicateEvent) {
+          if (evtId) window._lastHandledScreenEventId = evtId;
 
-        if (type === "ROUND_GANADO") {
-          triggerRoundGanadoOverlay(resolvedTeamName);
-          triviaApp.playBellSound();
-        } else if (type === "VICTORIA_GLOBAL") {
-          const winner = state.equipoGanador || resolvedTeamName;
-          triggerVictoriaGlobalOverlay(winner);
-        } else if (type === "ADD_POINT") {
-          const icon = resolvedTeamName === 'Esquina Técnica' ? "🔵" : "🔴";
-          triggerPointOverlay(resolvedTeamName, icon);
-          triviaApp.triggerConfetti();
-          triviaApp.playPointSound();
-        } else if (type === "TRIGGER_INCORRECT") {
-          triggerIncorrectOverlay();
-          triviaApp.playBuzzerSound();
-        } else if (type === "RING_BELL" || type === "RESET_ALL" || (type === "TOGGLE_ANSWER" && actionEvent.revealed)) {
-          triviaApp.playBellSound();
+          const rawTeam = (actionEvent.team || '').toLowerCase();
+          const rawTeamName = actionEvent.teamName || '';
+          
+          let resolvedTeamName = 'Esquina Técnica';
+          if (rawTeam === 'equipoB' || rawTeam === 'ruda' || rawTeam === 'esquinaruda' || rawTeamName === 'Esquina Ruda') {
+            resolvedTeamName = 'Esquina Ruda';
+          } else if (rawTeam === 'equipoa' || rawTeam === 'tecnica' || rawTeam === 'esquinatecnica' || rawTeamName === 'Esquina Técnica') {
+            resolvedTeamName = 'Esquina Técnica';
+          } else if (equipoB_Rounds > equipoA_Rounds) {
+            resolvedTeamName = 'Esquina Ruda';
+          } else {
+            resolvedTeamName = 'Esquina Técnica';
+          }
+
+          if (type === "ROUND_GANADO") {
+            triggerRoundGanadoOverlay(resolvedTeamName);
+            triviaApp.playBellSound();
+          } else if (type === "VICTORIA_GLOBAL") {
+            const winner = state.equipoGanador || resolvedTeamName;
+            triggerVictoriaGlobalOverlay(winner);
+          } else if (type === "ADD_POINT") {
+            const icon = resolvedTeamName === 'Esquina Técnica' ? "🔵" : "🔴";
+            triggerPointOverlay(resolvedTeamName, icon);
+            triviaApp.triggerConfetti();
+            triviaApp.playPointSound();
+          } else if (type === "TRIGGER_INCORRECT") {
+            triggerIncorrectOverlay();
+            triviaApp.playBuzzerSound();
+          } else if (type === "RING_BELL" || type === "RESET_ALL" || (type === "TOGGLE_ANSWER" && actionEvent.revealed)) {
+            triviaApp.playBellSound();
+          }
         }
       }
 

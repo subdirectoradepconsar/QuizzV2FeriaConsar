@@ -161,8 +161,9 @@ class TriviaApp {
       }
     }
 
-    // 2. LocalStorage Storage Listener (Mismo navegador/pestañas)
+    // 2. LocalStorage Storage Listener (Mismo navegador/pestañas - Fallback si BroadcastChannel no está disponible)
     window.addEventListener("storage", (e) => {
+      if (this.broadcast) return; // Si BroadcastChannel ya está activo en este navegador, evitar procesar duplicado
       if (e.key === this.storageKey && e.newValue) {
         try {
           const parsed = JSON.parse(e.newValue);
@@ -255,9 +256,12 @@ class TriviaApp {
       ruda: this.state.aciertos_round.equipoB || 0
     };
 
-    const actionStr = typeof actionEvent === 'string' 
-      ? actionEvent 
-      : (actionEvent?.action || actionEvent?.type || "ACTUALIZAR_MARCADOR");
+    const eventId = Date.now() + "_" + Math.random().toString(36).substr(2, 6);
+    const normalizedActionEvent = typeof actionEvent === 'string' 
+      ? { type: actionEvent, action: actionEvent, eventId, timestamp: this.state.timestamp } 
+      : (actionEvent ? { ...actionEvent, eventId: actionEvent.eventId || eventId, timestamp: actionEvent.timestamp || this.state.timestamp } : null);
+
+    const actionStr = normalizedActionEvent?.type || normalizedActionEvent?.action || "ACTUALIZAR_MARCADOR";
 
     // Estructura exacta requerida para Firebase 'estado_trivia'
     const estadoTriviaData = {
@@ -282,9 +286,11 @@ class TriviaApp {
       juego_terminado: this.state.juego_terminado || false,
       equipoGanador: this.state.equipoGanador || null,
       accion: actionStr,
-      ultimo_evento: typeof actionEvent === 'object' && actionEvent !== null ? actionEvent : {
+      ultimo_evento: normalizedActionEvent || {
         type: actionStr,
-        action: actionStr
+        action: actionStr,
+        eventId,
+        timestamp: this.state.timestamp
       },
       timestamp: this.state.timestamp
     };
@@ -292,7 +298,7 @@ class TriviaApp {
     const syncData = {
       state: this.state,
       estado_trivia: estadoTriviaData,
-      actionEvent: typeof actionEvent === 'string' ? { type: actionEvent, action: actionEvent } : actionEvent
+      actionEvent: normalizedActionEvent
     };
 
     // Save to LocalStorage
@@ -1027,6 +1033,14 @@ class TriviaApp {
 
   playBuzzerSound() {
     if (!this.soundEnabled) return;
+
+    // Debounce de 800ms para evitar reproducciones duplicadas o empalmadas
+    const nowTs = Date.now();
+    if (this._lastBuzzerTime && (nowTs - this._lastBuzzerTime < 800)) {
+      return;
+    }
+    this._lastBuzzerTime = nowTs;
+
     this.initAudio();
     if (!this.audioCtx) return;
 
