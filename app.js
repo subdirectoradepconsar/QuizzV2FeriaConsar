@@ -83,6 +83,7 @@ const DEFAULT_STATE = {
   question_index_por_ronda: DEFAULT_QUESTION_INDEX_POR_RONDA(),
   isQuestionVisible: true,
   isAnswerRevealed: false,
+  visualMode: "juego",
   juego_terminado: false,
   equipoGanador: null,
   marcador_global: { equipoA: 0, equipoB: 0 }, // Rounds ganados
@@ -283,6 +284,7 @@ class TriviaApp {
       question_index_por_ronda: this.state.question_index_por_ronda || DEFAULT_QUESTION_INDEX_POR_RONDA(),
       isQuestionVisible: this.state.isQuestionVisible !== undefined ? this.state.isQuestionVisible : true,
       isAnswerRevealed: this.state.isAnswerRevealed !== undefined ? this.state.isAnswerRevealed : false,
+      visualMode: this.state.visualMode || "juego",
       juego_terminado: this.state.juego_terminado || false,
       equipoGanador: this.state.equipoGanador || null,
       accion: actionStr,
@@ -394,6 +396,9 @@ class TriviaApp {
     if (newState.isAnswerRevealed !== undefined) {
       this.state.isAnswerRevealed = newState.isAnswerRevealed;
     }
+    if (["espera", "presentacion", "juego"].includes(newState.visualMode)) {
+      this.state.visualMode = newState.visualMode;
+    }
     if (newState.juego_terminado !== undefined) {
       this.state.juego_terminado = newState.juego_terminado;
     }
@@ -430,6 +435,13 @@ class TriviaApp {
   subscribe(callback) {
     this.listeners.push(callback);
     callback(this.state, null);
+  }
+
+  setVisualMode(mode) {
+    if (!["espera", "presentacion", "juego"].includes(mode)) return false;
+    this.state.visualMode = mode;
+    this.saveAndSyncState({ type: "VISUAL_MODE", mode });
+    return true;
   }
 
   notifyListeners(actionEvent) {
@@ -943,6 +955,7 @@ class TriviaApp {
     this.state.isQuestionVisible = true;
     this.state.juego_terminado = false;
     this.state.equipoGanador = null;
+    this.state.visualMode = "espera";
     
     this.playBellSound();
     this.saveAndSyncState({ type: "RESET_ALL", action: "ACTUALIZAR_MARCADOR" });

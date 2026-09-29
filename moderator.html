@@ -9,7 +9,7 @@
   <!-- Firebase Realtime Database Compat SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=feria-visual-1">
   <script>
     tailwind.config = {
       theme: {
@@ -18,14 +18,14 @@
             consarGuinda: '#691C32',
             consarDorado: '#C5A059',
             tecnica: '#0284C7',
-            ruda: '#DC2626'
+            ruda: '#EC4899'
           }
         }
       }
     }
   </script>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans select-none pb-12 touch-manipulation">
+<body class="feria-moderator bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans select-none pb-12 touch-manipulation">
 
   <!-- Audio Element Preload for Boxing Bell -->
   <audio id="boxingBellAudio" src="Sonidocampanadebox.mp3" preload="auto"></audio>
@@ -49,7 +49,7 @@
       <!-- Marcador Global de Rounds (Ubicado a la izquierda) -->
       <div class="flex items-center gap-2 bg-slate-950/80 px-3.5 py-1.5 rounded-xl border border-amber-500/40 shadow-inner">
         <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">Marcador Global:</span>
-        <span class="text-sm font-extrabold text-white" id="headerGlobalScore">Equipo A: 0 R | Equipo B: 0 R</span>
+        <span class="text-sm font-extrabold text-white" id="headerGlobalScore">Dinamita: 0 R | Leyendas: 0 R</span>
       </div>
     </div>
 
@@ -73,6 +73,14 @@
 
     <!-- LEFT COLUMN: Selection of Round & Sheet Export (Lg: 3 cols) -->
     <div class="lg:col-span-3 flex flex-col gap-6">
+      <div class="visual-controls bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-md">
+        <p class="text-xs font-bold uppercase tracking-wider text-amber-400 mb-3">Pantalla del público</p>
+        <div class="grid gap-2">
+          <button type="button" data-visual-mode="espera" onclick="triviaApp.setVisualMode('espera')">🎬 Video de espera</button>
+          <button type="button" data-visual-mode="presentacion" onclick="triviaApp.setVisualMode('presentacion')">⚔️ Presentación</button>
+          <button type="button" data-visual-mode="juego" onclick="triviaApp.setVisualMode('juego')">❓ Mostrar juego</button>
+        </div>
+      </div>
       <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-md">
         <label class="block text-xs font-bold uppercase tracking-wider text-amber-400 mb-3">
           1. Selección de Round
@@ -183,7 +191,7 @@
           <!-- Esquina Técnica (Equipo A) -->
           <div class="bg-slate-950 border-2 border-sky-500/50 rounded-2xl p-3.5 text-center flex flex-col justify-between shadow-inner">
             <div>
-              <span class="text-xs font-black uppercase text-sky-400 tracking-wider">Esquina Técnica</span>
+              <span class="text-xs font-black uppercase text-sky-400 tracking-wider">Los Hermanos Dinamita del Retiro</span>
               
               <!-- Marcador Global de Rounds -->
               <div class="text-2xl font-black text-amber-400 mt-1 mb-0.5" id="caidasTecnica">0 / 3 Rounds</div>
@@ -201,7 +209,7 @@
           <!-- Esquina Ruda (Equipo B) -->
           <div class="bg-slate-950 border-2 border-rose-500/50 rounded-2xl p-3.5 text-center flex flex-col justify-between shadow-inner">
             <div>
-              <span class="text-xs font-black uppercase text-rose-400 tracking-wider">Esquina Ruda</span>
+              <span class="text-xs font-black uppercase text-rose-400 tracking-wider">Las Indestructibles Leyendas del Ahorro</span>
               
               <!-- Marcador Global de Rounds -->
               <div class="text-2xl font-black text-amber-400 mt-1 mb-0.5" id="caidasRuda">0 / 3 Rounds</div>
@@ -236,11 +244,11 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <button onclick="assignPointToTeam('tecnica')" class="min-h-[60px] p-4 bg-sky-950 border-2 border-sky-500 rounded-2xl hover:bg-sky-900 active:scale-95 transition-all text-sky-200 font-extrabold text-base flex items-center justify-center gap-3 shadow-lg">
           <span class="text-2xl">🔵</span>
-          <span>Equipo Azul (Técnica) +1</span>
+          <span>Hermanos Dinamita +1</span>
         </button>
         <button onclick="assignPointToTeam('ruda')" class="min-h-[60px] p-4 bg-rose-950 border-2 border-rose-500 rounded-2xl hover:bg-rose-900 active:scale-95 transition-all text-rose-200 font-extrabold text-base flex items-center justify-center gap-3 shadow-lg">
-          <span class="text-2xl">🔴</span>
-          <span>Equipo Rojo (Ruda) +1</span>
+          <span class="text-2xl">🩷</span>
+          <span>Leyendas del Ahorro +1</span>
         </button>
       </div>
 
@@ -282,7 +290,7 @@
       </div>
       <h3 class="text-3xl font-black text-yellow-400 mb-2">¡Pelea Finalizada!</h3>
       <p class="text-xl text-white mb-3 font-bold">
-        Ganador: <span class="text-amber-300 font-extrabold text-2xl uppercase" id="modVictoryWinnerName">Esquina Técnica</span>
+        Ganador: <span class="text-amber-300 font-extrabold text-2xl uppercase" id="modVictoryWinnerName">Los Hermanos Dinamita del Retiro</span>
       </p>
 
       <div class="p-3.5 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 text-xs font-semibold mb-6 flex flex-col items-center gap-1.5 shadow-inner">
@@ -305,11 +313,15 @@
 
   <!-- Scripts -->
   <script src="questions.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=feria-visual-1"></script>
+  <script src="visual.js?v=feria-visual-1"></script>
   <script>
     const GOALS = { 1: 1, 2: 5, 3: 4 };
     let currentState = null;
     let victoryModalDismissed = false;
+    const visualTeamName = (team) => /ruda|equipob|roj/i.test(String(team || ''))
+      ? 'Las Indestructibles Leyendas del Ahorro'
+      : 'Los Hermanos Dinamita del Retiro';
 
     window.addEventListener('DOMContentLoaded', () => {
       // El moderador actúa como control remoto; los efectos de audio (campana, etc.) suenan exclusivamente en la pantalla
@@ -348,7 +360,7 @@
 
       if (isGameOver && !victoryModalDismissed) {
         const winner = currentState.equipoGanador || (equipoA_Rounds >= 3 ? 'Esquina Técnica' : 'Esquina Ruda');
-        document.getElementById('modVictoryWinnerName').innerText = winner;
+        document.getElementById('modVictoryWinnerName').innerText = visualTeamName(winner);
         document.getElementById('modVictoryMatchIdText').innerText = `Partida: ${currentState.idPartida || "PART-001"}`;
         if (modVictoryModal) {
           modVictoryModal.classList.remove('hidden');
@@ -363,7 +375,10 @@
 
       // Header status guide & Webhook badge
       document.getElementById('headerMatchId').innerText = currentState.idPartida || "PART-001";
-      document.getElementById('headerGlobalScore').innerText = `Equipo A (Técnica): ${equipoA_Rounds} R | Equipo B (Ruda): ${equipoB_Rounds} R`;
+      document.getElementById('headerGlobalScore').innerText = `Dinamita: ${equipoA_Rounds} R | Leyendas: ${equipoB_Rounds} R`;
+      document.querySelectorAll('[data-visual-mode]').forEach(button => {
+        button.setAttribute('aria-pressed', String(button.dataset.visualMode === (currentState.visualMode || 'juego')));
+      });
 
       const webhookBadge = document.getElementById('headerWebhookBadge');
       if (webhookBadge) {
@@ -437,15 +452,15 @@
                 <span class="text-2xl">🔵</span>
                 <div class="text-left leading-tight">
                   <div class="text-xs text-sky-400 uppercase font-bold">Punto para</div>
-                  <div>Equipo Azul (Técnica)</div>
+                  <div>Hermanos Dinamita</div>
                 </div>
               </button>
               
               <button type="button" id="btnScoreRojo" class="min-h-[58px] p-3.5 bg-rose-950/90 border-2 border-rose-500 hover:bg-rose-900/90 active:scale-95 transition-all text-rose-200 font-black rounded-xl text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-lg shadow-rose-950/50 ${isGameOver ? 'opacity-40 cursor-not-allowed' : ''}">
-                <span class="text-2xl">🔴</span>
+                <span class="text-2xl">🩷</span>
                 <div class="text-left leading-tight">
                   <div class="text-xs text-rose-400 uppercase font-bold">Punto para</div>
-                  <div>Equipo Rojo (Ruda)</div>
+                  <div>Leyendas del Ahorro</div>
                 </div>
               </button>
             </div>
@@ -547,12 +562,9 @@
     function renderProgressDots(containerId, count, goal, teamClass) {
       const container = document.getElementById(containerId);
       if (!container) return;
-      container.innerHTML = '';
-      for (let i = 0; i < goal; i++) {
-        const dot = document.createElement('span');
-        dot.className = `progress-dot ${i < count ? `progress-dot-${teamClass}-active` : ''}`;
-        container.appendChild(dot);
-      }
+      container.setAttribute('role', 'img');
+      container.setAttribute('aria-label', `${count} de ${goal} aciertos`);
+      container.innerHTML = Array.from({ length: goal }, (_, i) => crearMascaraLuchador(teamClass === 'tecnica' ? 'blue' : 'red', i < count, i + 1)).join('');
     }
 
     let autoNextTimeout = null;

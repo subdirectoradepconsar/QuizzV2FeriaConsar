@@ -9,8 +9,8 @@
   --consar-navy: #102A43;
   --tecnica-blue: #0284C7;
   --tecnica-blue-glow: rgba(2, 132, 199, 0.5);
-  --ruda-red: #DC2626;
-  --ruda-red-glow: rgba(220, 38, 38, 0.5);
+  --ruda-red: #EC4899;
+  --ruda-red-glow: rgba(236, 72, 153, 0.5);
 }
 
 body {
@@ -109,7 +109,7 @@ body {
 }
 
 .bg-ruda {
-  background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%);
+  background: linear-gradient(135deg, #EC4899 0%, #831843 100%);
 }
 
 .border-tecnica {
@@ -117,7 +117,7 @@ body {
 }
 
 .border-ruda {
-  border-color: #F87171;
+  border-color: #F9A8D4;
 }
 
 .text-tecnica {
@@ -125,7 +125,7 @@ body {
 }
 
 .text-ruda {
-  color: #F87171;
+  color: #F9A8D4;
 }
 
 /* --- Custom Scrollbar --- */
@@ -169,9 +169,142 @@ body {
 }
 
 .progress-dot-ruda-active {
-  background: radial-gradient(circle at 35% 35%, #FCA5A5, #DC2626);
-  border-color: #FEF2F2;
-  box-shadow: 0 0 14px rgba(248, 113, 113, 0.9), inset 0 1px 2px rgba(255, 255, 255, 0.8);
+  background: radial-gradient(circle at 35% 35%, #F9A8D4, #EC4899);
+  border-color: #FCE7F3;
+  box-shadow: 0 0 14px rgba(236, 72, 153, 0.9), inset 0 1px 2px rgba(255, 255, 255, 0.8);
   transform: scale(1.2);
 }
 
+/* Identidad visual compartida con la arena SNEF. Las reglas del quiz siguen en app.js. */
+.arena-screen,
+.feria-moderator {
+  background: #050914;
+  background-image:
+    radial-gradient(circle at 16% 12%, rgba(20, 85, 179, .24), transparent 30%),
+    radial-gradient(circle at 84% 10%, rgba(219, 39, 119, .2), transparent 32%),
+    repeating-linear-gradient(180deg, transparent 0 5.5rem, rgba(251, 191, 36, .075) 5.5rem 5.63rem);
+}
+
+.arena-scoreboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(.75rem, 2vw, 2rem);
+}
+.team-score {
+  width: 100%;
+  min-width: 0;
+  max-width: 27rem;
+  min-height: 8.5rem;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-radius: 1.25rem;
+  backdrop-filter: blur(16px);
+}
+.team-score.team-dinamita { background: rgba(13, 32, 78, .88); box-shadow: 0 0 2rem rgba(37, 99, 235, .18); }
+.team-score.team-leyendas { justify-self: end; background: rgba(83, 10, 49, .88); border-color: rgba(244, 114, 182, .72); box-shadow: 0 0 2rem rgba(236, 72, 153, .18); }
+.team-score-logo { display: block; width: clamp(4rem, 6vw, 7rem); height: clamp(4rem, 6vw, 7rem); flex: 0 0 auto; object-fit: contain; mix-blend-mode: screen; }
+.team-score-name { display: block; font-size: clamp(.8rem, 1.15vw, 1.2rem); line-height: 1.18; letter-spacing: .09em; text-wrap: balance; }
+.arena-scoreboard > div:nth-child(2) { align-self: center; }
+.arena-question { border: 3px solid rgba(251, 191, 36, .72); background: linear-gradient(145deg, rgba(18, 27, 53, .95), rgba(8, 15, 32, .96)); box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, .6), 0 0 2.5rem rgba(251, 191, 36, .16); }
+.arena-victory { width: min(100%, 73rem); max-width: 73rem; max-height: calc(100dvh - 2rem); overflow-y: auto; padding: clamp(1.25rem, 3vw, 2.75rem); background: linear-gradient(135deg, #451a03, #111827 50%, #064e3b); box-shadow: 0 0 0 .4rem rgba(251, 191, 36, .15), 0 2rem 5rem rgba(0, 0, 0, .7); }
+.victory-team-logo { display: block; width: min(100%, 32rem); height: clamp(8rem, 20vh, 13rem); margin: 0 auto .5rem; object-fit: contain; mix-blend-mode: screen; }
+.victory-trophy { margin: -.5rem auto .75rem; font-size: clamp(2.25rem, 4vw, 3.5rem); line-height: 1; }
+.arena-victory #victoriaWinnerTeam { display: inline-block; max-width: 100%; font-size: clamp(2rem, 4vw, 5rem); line-height: 1.05; text-wrap: balance; overflow-wrap: anywhere; }
+
+.visual-fullscreen { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; overflow: hidden; background: #000; }
+.visual-fullscreen.hidden { display: none; }
+.visual-fullscreen video,
+.visual-fullscreen img { position: relative; z-index: 1; display: block; width: 100%; height: 100%; object-fit: contain; }
+.visual-presentation::before { content: ''; position: absolute; inset: -2rem; background: url('assets/presentacion-dinamita-vs-leyendas.png') center / cover no-repeat; filter: blur(1.5rem) brightness(.45); }
+
+.feria-moderator > header { background: rgba(2, 6, 23, .94); backdrop-filter: blur(16px); }
+.feria-moderator main > div > div { box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, .3); }
+.visual-controls { border-color: rgba(251, 191, 36, .45); }
+.visual-controls button { display: block; width: 100%; min-height: 3rem; padding: .7rem 1rem; border: 1px solid rgba(251, 191, 36, .35); border-radius: .8rem; background: rgba(15, 23, 42, .95); color: #fef3c7; text-align: left; font-weight: 800; touch-action: manipulation; }
+.visual-controls button:hover { background: rgba(69, 26, 3, .85); }
+.visual-controls button[aria-pressed="true"] { border-color: #fbbf24; background: #78350f; box-shadow: 0 0 0 2px rgba(251, 191, 36, .22); }
+.visual-controls button:focus-visible { outline: 3px solid #fbbf24; outline-offset: 2px; }
+
+@media (max-width: 900px) {
+  .arena-scoreboard { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .arena-scoreboard > div:nth-child(2) { grid-column: 1 / -1; grid-row: 1; }
+  .team-score { grid-row: 2; min-height: 6rem; padding: .6rem; gap: .35rem; }
+  .team-score-logo { width: 3.5rem; height: 3.5rem; }
+  .team-score-name { font-size: .65rem; letter-spacing: .02em; }
+  .team-score.team-leyendas { grid-column: 2; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arena-screen *, .feria-moderator * { animation-duration: .01ms !important; }
+}
+
+
+/* Indicadores de aciertos con máscaras SVG. */
+.lucha-mask {
+  --mask-base: #64748b;
+  --mask-deep: #1e293b;
+  --mask-accent: #cbd5e1;
+  --mask-trim: #f8fafc;
+  --mask-glow: rgba(148, 163, 184, .25);
+  --tilt: 0deg;
+  position: relative;
+  display: block;
+  width: 2.45rem;
+  height: 2.7rem;
+  flex: 0 0 auto;
+  transform: rotate(var(--tilt));
+  transition: opacity .25s ease, transform .25s ease, filter .25s ease;
+}
+
+.lucha-mask.red {
+  --mask-base: #ec4899;
+  --mask-deep: #831843;
+  --mask-accent: #f9a8d4;
+  --mask-trim: #fce7f3;
+  --mask-glow: rgba(236, 72, 153, .75);
+}
+
+.lucha-mask.blue {
+  --mask-base: #1d4ed8;
+  --mask-deep: #172554;
+  --mask-accent: #22d3ee;
+  --mask-trim: #a5f3fc;
+  --mask-glow: rgba(34, 211, 238, .65);
+}
+
+.lucha-mask svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.lucha-mask .mask-shell { fill: var(--mask-base); stroke: var(--mask-trim); stroke-width: 2.2; }
+.lucha-mask .mask-crown,
+.lucha-mask .mask-wing,
+.lucha-mask .mask-jaw { fill: var(--mask-accent); stroke: var(--mask-trim); stroke-width: 1.15; stroke-linejoin: round; }
+.lucha-mask .mask-eye,
+.lucha-mask .mask-mouth { fill: #020617; stroke: var(--mask-trim); stroke-width: 1.15; }
+.lucha-mask .mask-nose { fill: var(--mask-deep); stroke: var(--mask-accent); stroke-width: 1.25; stroke-linejoin: round; }
+.lucha-mask .mask-stitch { fill: none; stroke: var(--mask-trim); stroke-width: 1.2; stroke-linecap: round; }
+.lucha-mask .mask-shine { fill: none; stroke: rgba(255, 255, 255, .6); stroke-width: 2.2; stroke-linecap: round; }
+.lucha-mask:nth-child(1) { --tilt: -5deg; }
+.lucha-mask:nth-child(3) { --tilt: 5deg; }
+.lucha-mask.is-active { opacity: 1; filter: saturate(1.12) drop-shadow(0 0 .55rem var(--mask-glow)); }
+.lucha-mask.is-lost { opacity: .3; filter: grayscale(1) saturate(0); transform: rotate(var(--tilt)) scale(.9); }
+.mask-number {
+  position: absolute;
+  right: -.08rem;
+  bottom: -.08rem;
+  display: grid;
+  width: 1rem;
+  height: 1rem;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, .75);
+  border-radius: 9999px;
+  background: #0f172a;
+  color: #fff;
+  font-size: .62rem;
+  font-weight: 1000;
+  line-height: 1;
+  text-shadow: 0 1px 2px #000;
+}
+
+#dotsTecnica .lucha-mask, #dotsRuda .lucha-mask { width: clamp(1.35rem, 2.2vw, 2.2rem); height: clamp(1.6rem, 2.5vw, 2.5rem); }
+#modDotsTecnica .lucha-mask, #modDotsRuda .lucha-mask { width: 1.65rem; height: 1.9rem; }
+#modDotsTecnica, #modDotsRuda, #dotsTecnica, #dotsRuda { flex-wrap: wrap; }
