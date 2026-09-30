@@ -53,7 +53,7 @@ function arenaRender() {
   const answersLocked = arenaStage !== 'questions' || state.juego_terminado;
   const resolved = state.resolvedQuestionKey === `${round}:${index}`;
   const canAnswer = !answersLocked && !resolved && !!state.activeTeam;
-  document.getElementById('arenaRound').textContent = ['Primera ronda', 'Segunda ronda', 'Tercera ronda'][round - 1] || 'Ronda';
+  document.getElementById('arenaRound').textContent = `Caída ${round}`;
   document.getElementById('arenaQuestionCount').textContent = `Pregunta ${index + 1}/${total}`;
   document.getElementById('arenaNumber').textContent = `Pregunta ${index + 1} / ${total}`;
   document.getElementById('arenaScore').textContent = `💗 ${pink} · ${blue} 🔵`;
@@ -74,7 +74,7 @@ function arenaRender() {
   else if (resolved && round === 3 && state.pendingRoundResolution) turnMessage = 'Respuesta oficial revelada. Pulsa “Ver ganador” cuando estés listo.';
   else if (resolved && round === 3) turnMessage = 'Respuesta oficial revelada. Pulsa “Siguiente pregunta” cuando estés listo.';
   else if (resolved) turnMessage = round === 1 ? 'Ambos fallaron. Pulsa “Siguiente pregunta” cuando estés listo.' : 'Respuesta incorrecta. Pulsa “Siguiente pregunta”; el otro equipo sigue.';
-  else turnMessage = activeName ? `Turno de ${activeName}` : `Elige quién comienza el bloque ${round}.`;
+  else turnMessage = activeName ? `Turno de ${activeName}` : `Elige quién comienza la caída ${round}.`;
   document.getElementById('arenaTurnMessage').textContent = turnMessage;
   document.getElementById('arenaStageTag').textContent = ({wait:'VIDEO DE ESPERA',presentation:'PRESENTACIÓN',questions:'PREGUNTAS'})[arenaStage] || 'PREGUNTAS';
   arenaRenderDots('arenaPink', pink, goal);
@@ -95,7 +95,7 @@ function arenaRender() {
     roundSelect.replaceChildren();
     [1, 2, 3].forEach(n => {
       const button = document.createElement('button');
-      button.textContent = `Bloque ${n}`;
+      button.textContent = `Caída ${n}`;
       button.className = n === round ? 'active' : '';
       button.onclick = () => triviaApp.setRound(n);
       roundSelect.appendChild(button);
@@ -150,7 +150,7 @@ function arenaRender() {
   const nextButton = document.getElementById('arenaNext');
   nextButton.disabled = index >= total - 1 && !state.pendingRoundResolution && !(round === 1 && resolved);
   nextButton.textContent = state.pendingRoundResolution ?
-    (round === 3 ? '➡ Ver ganador' : `➡ Iniciar bloque ${round + 1}`) :
+    (round === 3 ? '➡ Ver ganador' : `➡ Iniciar caída ${round + 1}`) :
     (round === 1 && index >= total - 1 && resolved ? '➡ Volver al primer reto' : '➡ Siguiente pregunta');
 }
 
