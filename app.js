@@ -565,6 +565,7 @@ class TriviaApp {
         previousAttempt.equipo === this.state.activeTeam && previousAttempt.resultado === 'Incorrecta';
       if (round > 1 || bothTeamsMissed) {
         this.state.resolvedQuestionKey = questionKey;
+        if (round === 3) this.state.isAnswerRevealed = true;
         if (bothTeamsMissed) {
           this.state.respuestas.equipoA.ronda1[questionIndex] = 'Incorrecta';
           this.state.respuestas.equipoB.ronda1[questionIndex] = 'Incorrecta';

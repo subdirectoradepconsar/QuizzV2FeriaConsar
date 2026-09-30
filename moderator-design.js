@@ -64,11 +64,15 @@ function arenaRender() {
   document.getElementById('arenaPink').disabled = answersLocked || resolved || !!state.activeTeam;
   document.getElementById('arenaBlue').disabled = answersLocked || resolved || !!state.activeTeam;
   const activeName = state.activeTeam === 'equipoA' ? 'Los Hermanos Dinamita del Retiro' : state.activeTeam === 'equipoB' ? 'Las Indestructibles Leyendas del Ahorro' : null;
+  const lastAttempt = [...(state.intentos || [])].reverse().find(item => item.ronda === round && item.pregunta === index + 1);
+  const correctAnswer = resolved && state.isAnswerRevealed && lastAttempt?.resultado === 'Correcta';
   let turnMessage;
   if (answersLocked) turnMessage = 'Activa “3. Mostrar preguntas” para responder.';
-  else if (resolved && state.isAnswerRevealed && state.pendingRoundResolution?.round === 3) turnMessage = 'Respuesta correcta revelada. Pulsa “Ver ganador” cuando estés listo.';
-  else if (resolved && state.isAnswerRevealed && round === 3) turnMessage = `Respuesta correcta revelada. ${activeName} sigue al pulsar “Siguiente pregunta”.`;
-  else if (resolved && state.isAnswerRevealed) turnMessage = 'Respuesta correcta revelada. Pulsa “Siguiente pregunta” cuando estés listo.';
+  else if (correctAnswer && state.pendingRoundResolution?.round === 3) turnMessage = 'Respuesta correcta revelada. Pulsa “Ver ganador” cuando estés listo.';
+  else if (correctAnswer && round === 3) turnMessage = `Respuesta correcta revelada. ${activeName} sigue al pulsar “Siguiente pregunta”.`;
+  else if (correctAnswer) turnMessage = 'Respuesta correcta revelada. Pulsa “Siguiente pregunta” cuando estés listo.';
+  else if (resolved && round === 3 && state.pendingRoundResolution) turnMessage = 'Respuesta oficial revelada. Pulsa “Ver ganador” cuando estés listo.';
+  else if (resolved && round === 3) turnMessage = 'Respuesta oficial revelada. Pulsa “Siguiente pregunta” cuando estés listo.';
   else if (resolved) turnMessage = round === 1 ? 'Ambos fallaron. Pulsa “Siguiente pregunta” cuando estés listo.' : 'Respuesta incorrecta. Pulsa “Siguiente pregunta”; el otro equipo sigue.';
   else turnMessage = activeName ? `Turno de ${activeName}` : `Elige quién comienza el bloque ${round}.`;
   document.getElementById('arenaTurnMessage').textContent = turnMessage;
