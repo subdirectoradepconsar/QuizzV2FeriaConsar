@@ -26,8 +26,8 @@ function arenaSubmitAttempt(correct, selectedOption = null) {
   const accepted = triviaApp.recordTurnAttempt(correct, selectedOption);
   const sameQuestion = triviaApp.state.round_activo === previousRound &&
     triviaApp.state.questionIndex === previousQuestion;
-  const bothTeamsMissed = triviaApp.state.resolvedQuestionKey === `${previousRound}:${previousQuestion}`;
-  if (accepted && sameQuestion && !correct && bothTeamsMissed && !triviaApp.state.juego_terminado) {
+  const questionClosed = triviaApp.state.resolvedQuestionKey === `${previousRound}:${previousQuestion}`;
+  if (accepted && sameQuestion && !correct && questionClosed && !triviaApp.state.juego_terminado) {
     scheduleAutoNextQuestion(1800, previousRound, previousQuestion);
   }
   setTimeout(() => { arenaSubmissionLocked = false; }, 500);
@@ -72,7 +72,7 @@ function arenaRender() {
   document.getElementById('arenaPink').disabled = answersLocked || resolved || !!state.activeTeam;
   document.getElementById('arenaBlue').disabled = answersLocked || resolved || !!state.activeTeam;
   const activeName = state.activeTeam === 'equipoA' ? 'Los Hermanos Dinamita del Retiro' : state.activeTeam === 'equipoB' ? 'Las Indestructibles Leyendas del Ahorro' : null;
-  document.getElementById('arenaTurnMessage').textContent = answersLocked ? 'Activa “3. Mostrar preguntas” para responder.' : resolved && state.isAnswerRevealed ? 'Respuesta correcta revelada. Pulsa “Siguiente pregunta” cuando estés listo.' : resolved ? 'Ambos fallaron. Preparando la siguiente pregunta.' : activeName ? `Turno de ${activeName}` : `Elige quién comienza el bloque ${round}.`;
+  document.getElementById('arenaTurnMessage').textContent = answersLocked ? 'Activa “3. Mostrar preguntas” para responder.' : resolved && state.isAnswerRevealed ? 'Respuesta correcta revelada. Pulsa “Siguiente pregunta” cuando estés listo.' : resolved ? round === 1 ? 'Ambos fallaron. Preparando la siguiente pregunta.' : 'Respuesta incorrecta. El otro equipo va en la siguiente pregunta.' : activeName ? `Turno de ${activeName}` : `Elige quién comienza el bloque ${round}.`;
   document.getElementById('arenaStageTag').textContent = ({wait:'VIDEO DE ESPERA',presentation:'PRESENTACIÓN',questions:'PREGUNTAS'})[arenaStage] || 'PREGUNTAS';
   arenaRenderDots('arenaPink', pink, goal);
   arenaRenderDots('arenaBlue', blue, goal);
@@ -119,7 +119,7 @@ function arenaRender() {
       wrong.type = 'button';
       wrong.className = 'arena-open-wrong';
       wrong.disabled = !canAnswer;
-      wrong.textContent = '✕ Respuesta incorrecta · pasar turno';
+      wrong.textContent = round === 1 ? '✕ Respuesta incorrecta · pasar turno' : '✕ Incorrecta · siguiente pregunta';
       wrong.onclick = () => arenaSubmitAttempt(false);
       validation.appendChild(wrong);
       content.appendChild(validation);

@@ -560,12 +560,12 @@ class TriviaApp {
       const nextTeamName = this.state.activeTeam === 'equipoA' ? 'Los Hermanos Dinamita del Retiro' : 'Las Indestructibles Leyendas del Ahorro';
       attempt.turnoSiguiente = nextTeamName;
       const previousAttempt = attempts[attempts.length - 1];
-      const bothTeamsMissed = previousAttempt?.ronda === round &&
+      const bothTeamsMissed = round === 1 && previousAttempt?.ronda === round &&
         previousAttempt.pregunta === questionIndex + 1 &&
         previousAttempt.equipo === this.state.activeTeam && previousAttempt.resultado === 'Incorrecta';
-      if (bothTeamsMissed) {
+      if (round > 1 || bothTeamsMissed) {
         this.state.resolvedQuestionKey = questionKey;
-        if (round === 1) {
+        if (bothTeamsMissed) {
           this.state.respuestas.equipoA.ronda1[questionIndex] = 'Incorrecta';
           this.state.respuestas.equipoB.ronda1[questionIndex] = 'Incorrecta';
         }
@@ -576,8 +576,8 @@ class TriviaApp {
         this.sendAttemptWebhook(previousAttempt);
         this.sendAttemptWebhook(attempt);
       }
-      if (bothTeamsMissed && round > 1 && questionIndex === TRIVIA_QUESTIONS[this.state.versionId].questions.length - 1) {
-        this.triggerIncorrect();
+      if (round > 1 && questionIndex === TRIVIA_QUESTIONS[this.state.versionId].questions.length - 1) {
+        this.evaluateEndOfRound(round, null);
       }
       return true;
     }
