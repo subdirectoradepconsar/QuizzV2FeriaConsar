@@ -122,7 +122,7 @@ function arenaRender() {
       wrong.type = 'button';
       wrong.className = 'arena-open-wrong';
       wrong.disabled = !canAnswer;
-      wrong.textContent = round === 1 ? '✕ Respuesta incorrecta · pasar turno' : '✕ Incorrecta · siguiente pregunta';
+      wrong.textContent = round === 1 ? '✕ Respuesta incorrecta · pasar turno' : '✕ Incorrecta';
       wrong.onclick = () => arenaSubmitAttempt(false);
       validation.appendChild(wrong);
       content.appendChild(validation);
