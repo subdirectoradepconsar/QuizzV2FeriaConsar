@@ -21,15 +21,7 @@ function arenaSubmitAttempt(correct, selectedOption = null) {
     return;
   }
   arenaSubmissionLocked = true;
-  const previousRound = currentState.round_activo;
-  const previousQuestion = currentState.questionIndex;
-  const accepted = triviaApp.recordTurnAttempt(correct, selectedOption);
-  const sameQuestion = triviaApp.state.round_activo === previousRound &&
-    triviaApp.state.questionIndex === previousQuestion;
-  const questionClosed = triviaApp.state.resolvedQuestionKey === `${previousRound}:${previousQuestion}`;
-  if (accepted && sameQuestion && !correct && questionClosed && !triviaApp.state.juego_terminado) {
-    scheduleAutoNextQuestion(1800, previousRound, previousQuestion);
-  }
+  triviaApp.recordTurnAttempt(correct, selectedOption);
   setTimeout(() => { arenaSubmissionLocked = false; }, 500);
 }
 
@@ -77,7 +69,7 @@ function arenaRender() {
   else if (resolved && state.isAnswerRevealed && state.pendingRoundResolution?.round === 3) turnMessage = 'Respuesta correcta revelada. Pulsa “Ver ganador” cuando estés listo.';
   else if (resolved && state.isAnswerRevealed && round === 3) turnMessage = `Respuesta correcta revelada. ${activeName} sigue al pulsar “Siguiente pregunta”.`;
   else if (resolved && state.isAnswerRevealed) turnMessage = 'Respuesta correcta revelada. Pulsa “Siguiente pregunta” cuando estés listo.';
-  else if (resolved) turnMessage = round === 1 ? 'Ambos fallaron. Preparando la siguiente pregunta.' : 'Respuesta incorrecta. El otro equipo va en la siguiente pregunta.';
+  else if (resolved) turnMessage = round === 1 ? 'Ambos fallaron. Pulsa “Siguiente pregunta” cuando estés listo.' : 'Respuesta incorrecta. Pulsa “Siguiente pregunta”; el otro equipo sigue.';
   else turnMessage = activeName ? `Turno de ${activeName}` : `Elige quién comienza el bloque ${round}.`;
   document.getElementById('arenaTurnMessage').textContent = turnMessage;
   document.getElementById('arenaStageTag').textContent = ({wait:'VIDEO DE ESPERA',presentation:'PRESENTACIÓN',questions:'PREGUNTAS'})[arenaStage] || 'PREGUNTAS';
@@ -152,9 +144,10 @@ function arenaRender() {
     }
   document.getElementById('arenaBack').disabled = index === 0 || !!state.pendingRoundResolution;
   const nextButton = document.getElementById('arenaNext');
-  nextButton.disabled = index >= total - 1 && !state.pendingRoundResolution;
+  nextButton.disabled = index >= total - 1 && !state.pendingRoundResolution && !(round === 1 && resolved);
   nextButton.textContent = state.pendingRoundResolution ?
-    (round === 3 ? '➡ Ver ganador' : `➡ Iniciar bloque ${round + 1}`) : '➡ Siguiente pregunta';
+    (round === 3 ? '➡ Ver ganador' : `➡ Iniciar bloque ${round + 1}`) :
+    (round === 1 && index >= total - 1 && resolved ? '➡ Volver al primer reto' : '➡ Siguiente pregunta');
 }
 
 window.addEventListener('DOMContentLoaded', () => {

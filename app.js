@@ -570,14 +570,14 @@ class TriviaApp {
           this.state.respuestas.equipoB.ronda1[questionIndex] = 'Incorrecta';
         }
       }
+      if (round > 1 && questionIndex === TRIVIA_QUESTIONS[this.state.versionId].questions.length - 1) {
+        this.state.pendingRoundResolution = { round, questionIndex, result: 'wrong' };
+      }
       this.saveAndSyncState({ type: 'ATTEMPT_WRONG', action: 'RESPUESTA_INCORRECTA', team: key, teamName, nextTeam: this.state.activeTeam, nextTeamName, attempt });
       if (round > 1) this.sendAttemptWebhook(attempt);
       else if (bothTeamsMissed) {
         this.sendAttemptWebhook(previousAttempt);
         this.sendAttemptWebhook(attempt);
-      }
-      if (round > 1 && questionIndex === TRIVIA_QUESTIONS[this.state.versionId].questions.length - 1) {
-        this.evaluateEndOfRound(round, null);
       }
       return true;
     }
@@ -847,7 +847,8 @@ class TriviaApp {
     const pending = this.state.pendingRoundResolution;
     if (!pending || pending.round !== this.state.round_activo || pending.questionIndex !== this.state.questionIndex) return false;
     this.state.pendingRoundResolution = null;
-    this.addPoint(pending.team, 0);
+    if (pending.result === 'wrong') this.evaluateEndOfRound(pending.round, null);
+    else this.addPoint(pending.team, 0);
     return true;
   }
 

@@ -207,7 +207,7 @@
 
   <!-- Scripts -->
   <script src="questions.js"></script>
-  <script src="app.js?v=round3-turnos"></script>
+  <script src="app.js?v=avance-manual"></script>
   <script>
     const GOALS = { 1: 1, 2: 5, 3: 4 };
     let lastState = null;
@@ -326,16 +326,18 @@
             playAnswerAudio('correctAnswerAudio');
           } else if (type === "TURN_CHANGED") {
             showTurnOverlay(actionEvent.teamName || resolvedTeamName);
-          } else if (type === "CHANGE_QUESTION" && state.round_activo === 3 && state.activeTeam) {
+          } else if (type === "CHANGE_QUESTION" && state.activeTeam) {
             showTurnOverlay(state.activeTeam === 'equipoA'
               ? 'Los Hermanos Dinamita del Retiro' : 'Las Indestructibles Leyendas del Ahorro');
           } else if (type === "ATTEMPT_WRONG") {
             triggerIncorrectOverlay();
             playWrongAnswerAudio();
             const missedRound = state.round_activo;
-            if (missedRound !== 3) {
+            const missedQuestion = state.questionIndex;
+            if (missedRound === 1 && state.resolvedQuestionKey !== `1:${state.questionIndex}`) {
               setTimeout(() => {
-                if (lastState && !lastState.juego_terminado && lastState.round_activo === missedRound) {
+                if (lastState && !lastState.juego_terminado && lastState.round_activo === missedRound &&
+                    lastState.questionIndex === missedQuestion) {
                   showTurnOverlay(actionEvent.nextTeamName);
                 }
               }, 1300);
