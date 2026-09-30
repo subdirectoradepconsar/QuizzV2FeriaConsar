@@ -43,7 +43,7 @@
   <!-- Audio Element Preload for Boxing Bell -->
   <audio id="boxingBellAudio" src="Sonidocampanadebox.mp3" preload="auto"></audio>
   <audio id="correctAnswerAudio" src="Aplausos-corto.mp3" preload="auto"></audio>
-  <audio id="wrongAnswerAudio" src="Gritos-corto.mp3" preload="auto"></audio>
+  <audio id="wrongAnswerAudio" src="abucheo-tm.mp3" preload="auto"></audio>
 
   <!-- TOP BAR: CONSAR Branding & Ring Scoreboard Counters -->
   <header class="w-full max-w-7xl mx-auto flex items-center justify-between gap-4 pb-4 border-b border-amber-500/30 relative z-10">
@@ -221,6 +221,29 @@
       audio.play().catch(error => console.warn('No se pudo reproducir el sonido de respuesta:', error));
     }
 
+    let wrongAudioStopTimer = null;
+    let wrongAudioRun = 0;
+    let lastWrongAudioEvent = 0;
+    function playWrongAnswerAudio() {
+      const now = Date.now();
+      if (now - lastWrongAudioEvent < 300) return;
+      lastWrongAudioEvent = now;
+      const audio = document.getElementById('wrongAnswerAudio');
+      if (!audio) return;
+      const run = ++wrongAudioRun;
+      clearTimeout(wrongAudioStopTimer);
+      audio.pause();
+      audio.currentTime = 0;
+      audio.play().then(() => {
+        if (run !== wrongAudioRun) return;
+        wrongAudioStopTimer = setTimeout(() => {
+          audio.pause();
+          audio.currentTime = 0;
+          wrongAudioStopTimer = null;
+        }, 2000);
+      }).catch(error => console.warn('No se pudo reproducir el sonido de error:', error));
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       // Audio Context Unlock on User Interaction
       document.body.addEventListener('click', () => {
@@ -305,11 +328,11 @@
             showTurnOverlay(actionEvent.teamName || resolvedTeamName);
           } else if (type === "ATTEMPT_WRONG") {
             triggerIncorrectOverlay();
-            playAnswerAudio('wrongAnswerAudio');
+            playWrongAnswerAudio();
             setTimeout(() => showTurnOverlay(actionEvent.nextTeamName), 1300);
           } else if (type === "TRIGGER_INCORRECT") {
             triggerIncorrectOverlay();
-            triviaApp.playBuzzerSound();
+            playWrongAnswerAudio();
           } else if (type === "RING_BELL" || type === "RESET_ALL" || (type === "TOGGLE_ANSWER" && actionEvent.revealed)) {
             triviaApp.playBellSound();
           }
