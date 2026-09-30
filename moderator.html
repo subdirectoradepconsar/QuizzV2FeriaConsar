@@ -589,6 +589,7 @@
     function nextQuestion() {
       cancelAutoNextQuestion();
       if (currentState) {
+        if (triviaApp.finalizePendingRound()) return;
         const total = TRIVIA_QUESTIONS[currentState.versionId].questions.length;
         if (currentState.questionIndex < total - 1) {
           triviaApp.setQuestionIndex(currentState.questionIndex + 1);

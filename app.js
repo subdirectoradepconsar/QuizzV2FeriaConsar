@@ -86,6 +86,7 @@ const DEFAULT_STATE = {
   screenPhase: "questions",
   activeTeam: null,
   resolvedQuestionKey: null,
+  pendingRoundResolution: null,
   intentos: [],
   juego_terminado: false,
   equipoGanador: null,
@@ -292,6 +293,7 @@ class TriviaApp {
       screenPhase: this.state.screenPhase || "questions",
       activeTeam: this.state.activeTeam || null,
       resolvedQuestionKey: this.state.resolvedQuestionKey || null,
+      pendingRoundResolution: this.state.pendingRoundResolution || null,
       intentos: this.state.intentos || [],
       juego_terminado: this.state.juego_terminado || false,
       equipoGanador: this.state.equipoGanador || null,
@@ -409,6 +411,7 @@ class TriviaApp {
     }
     if (newState.activeTeam !== undefined) this.state.activeTeam = newState.activeTeam;
     if (newState.resolvedQuestionKey !== undefined) this.state.resolvedQuestionKey = newState.resolvedQuestionKey;
+    if (newState.pendingRoundResolution !== undefined) this.state.pendingRoundResolution = newState.pendingRoundResolution;
     if (Array.isArray(newState.intentos)) this.state.intentos = newState.intentos;
     if (newState.juego_terminado !== undefined) {
       this.state.juego_terminado = newState.juego_terminado;
@@ -465,6 +468,7 @@ class TriviaApp {
       this.state.isQuestionVisible = true;
       this.state.activeTeam = null;
       this.state.resolvedQuestionKey = null;
+      this.state.pendingRoundResolution = null;
 
       syncAciertosState(this.state);
 
@@ -486,6 +490,7 @@ class TriviaApp {
       this.state.isQuestionVisible = true;
       this.state.activeTeam = null;
       this.state.resolvedQuestionKey = null;
+      this.state.pendingRoundResolution = null;
       syncAciertosState(this.state);
       this.saveAndSyncState({ type: "SET_VERSION", action: "ACTUALIZAR_MARCADOR", versionId, questionIndex: 0 });
     }
@@ -502,6 +507,7 @@ class TriviaApp {
       this.state.isAnswerRevealed = false;
       this.state.isQuestionVisible = true;
       this.state.resolvedQuestionKey = null;
+      this.state.pendingRoundResolution = null;
       this.saveAndSyncState({ type: "CHANGE_QUESTION", action: "ACTUALIZAR_MARCADOR", index });
     }
   }
@@ -577,7 +583,7 @@ class TriviaApp {
     }
     this.state.resolvedQuestionKey = questionKey;
     this.state.isAnswerRevealed = true;
-    this.addAcierto(key, 1);
+    this.addAcierto(key, 1, true);
     this.sendAttemptWebhook(attempt);
     return true;
   }
@@ -675,11 +681,11 @@ class TriviaApp {
     }
   }
 
-  addAcierto(team, amount = 1) {
-    this.addPoint(team, amount);
+  addAcierto(team, amount = 1, deferResolution = false) {
+    this.addPoint(team, amount, deferResolution);
   }
 
-  addPoint(team, amount = 1) {
+  addPoint(team, amount = 1, deferResolution = false) {
     const key = (team === 'tecnica' || team === 'equipoA' || team === 'equipoAzul') ? 'equipoA' : 'equipoB';
     const teamDisplayName = key === 'equipoA' ? 'Los Hermanos Dinamita del Retiro' : 'Las Indestructibles Leyendas del Ahorro';
 
@@ -707,6 +713,14 @@ class TriviaApp {
     const totalQuestionsInRound = TRIVIA_QUESTIONS[this.state.versionId]?.questions?.length || (roundNum === 1 ? 8 : (roundNum === 2 ? 10 : 6));
     const currentGoal = ROUND_GOALS[roundNum] || (roundNum === 1 ? 1 : (roundNum === 2 ? 5 : 4));
     const teamScoreInRound = this.state.aciertos_round[key] || 0;
+    const isLastQuestion = qIdx >= totalQuestionsInRound - 1;
+
+    if (deferResolution && (teamScoreInRound >= currentGoal || isLastQuestion)) {
+      this.state.pendingRoundResolution = { round: roundNum, questionIndex: qIdx, team: key };
+      this.playPointSound();
+      this.saveAndSyncState({ type: 'ADD_POINT', action: 'ACTUALIZAR_MARCADOR', team: key, teamName: teamDisplayName, amount });
+      return;
+    }
 
     // El primer bloque solo da el derecho de iniciar el segundo; no suma al marcador global.
     if (teamScoreInRound >= currentGoal) {
@@ -808,8 +822,6 @@ class TriviaApp {
     }
 
     // Si aún no se alcanza la meta del round:
-    const isLastQuestion = qIdx >= totalQuestionsInRound - 1;
-
     if (isLastQuestion) {
       this.evaluateEndOfRound(roundNum, key);
     } else {
@@ -824,6 +836,14 @@ class TriviaApp {
       };
       this.saveAndSyncState(evt);
     }
+  }
+
+  finalizePendingRound() {
+    const pending = this.state.pendingRoundResolution;
+    if (!pending || pending.round !== this.state.round_activo || pending.questionIndex !== this.state.questionIndex) return false;
+    this.state.pendingRoundResolution = null;
+    this.addPoint(pending.team, 0);
+    return true;
   }
 
   evaluateEndOfRound(roundNum, lastScoringKey = null) {
@@ -1053,6 +1073,7 @@ class TriviaApp {
     this.state.screenPhase = "wait";
     this.state.activeTeam = null;
     this.state.resolvedQuestionKey = null;
+    this.state.pendingRoundResolution = null;
     this.state.intentos = [];
     this.state.juego_terminado = false;
     this.state.equipoGanador = null;

@@ -27,8 +27,7 @@ function arenaSubmitAttempt(correct, selectedOption = null) {
   const sameQuestion = triviaApp.state.round_activo === previousRound &&
     triviaApp.state.questionIndex === previousQuestion;
   const bothTeamsMissed = triviaApp.state.resolvedQuestionKey === `${previousRound}:${previousQuestion}`;
-  if (accepted && sameQuestion && !triviaApp.state.juego_terminado &&
-      (correct || bothTeamsMissed)) {
+  if (accepted && sameQuestion && !correct && bothTeamsMissed && !triviaApp.state.juego_terminado) {
     scheduleAutoNextQuestion(1800, previousRound, previousQuestion);
   }
   setTimeout(() => { arenaSubmissionLocked = false; }, 500);
@@ -73,7 +72,7 @@ function arenaRender() {
   document.getElementById('arenaPink').disabled = answersLocked || resolved || !!state.activeTeam;
   document.getElementById('arenaBlue').disabled = answersLocked || resolved || !!state.activeTeam;
   const activeName = state.activeTeam === 'equipoA' ? 'Los Hermanos Dinamita del Retiro' : state.activeTeam === 'equipoB' ? 'Las Indestructibles Leyendas del Ahorro' : null;
-  document.getElementById('arenaTurnMessage').textContent = answersLocked ? 'Activa “3. Mostrar preguntas” para responder.' : resolved ? 'Pregunta resuelta. Preparando la siguiente.' : activeName ? `Turno de ${activeName}` : `Elige quién comienza el bloque ${round}.`;
+  document.getElementById('arenaTurnMessage').textContent = answersLocked ? 'Activa “3. Mostrar preguntas” para responder.' : resolved && state.isAnswerRevealed ? 'Respuesta correcta revelada. Pulsa “Siguiente pregunta” cuando estés listo.' : resolved ? 'Ambos fallaron. Preparando la siguiente pregunta.' : activeName ? `Turno de ${activeName}` : `Elige quién comienza el bloque ${round}.`;
   document.getElementById('arenaStageTag').textContent = ({wait:'VIDEO DE ESPERA',presentation:'PRESENTACIÓN',questions:'PREGUNTAS'})[arenaStage] || 'PREGUNTAS';
   arenaRenderDots('arenaPink', pink, goal);
   arenaRenderDots('arenaBlue', blue, goal);
@@ -129,17 +128,26 @@ function arenaRender() {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'arena-option';
+        button.classList.toggle('revealed-correct', state.isAnswerRevealed && i === question.correct);
         button.disabled = !canAnswer;
         const letter = document.createElement('span');
         letter.className = 'arena-letter';
         letter.textContent = 'ABCD'[i];
         button.append(letter, document.createTextNode(option.replace(/^[a-d]\)\s*/i, '')));
+        if (state.isAnswerRevealed && i === question.correct) {
+          const correctLabel = document.createElement('strong');
+          correctLabel.textContent = '✓ Correcta';
+          button.appendChild(correctLabel);
+        }
         button.onclick = () => arenaSubmitAttempt(i === question.correct, i);
         content.appendChild(button);
       });
     }
-  document.getElementById('arenaBack').disabled = index === 0;
-  document.getElementById('arenaNext').disabled = index >= total - 1;
+  document.getElementById('arenaBack').disabled = index === 0 || !!state.pendingRoundResolution;
+  const nextButton = document.getElementById('arenaNext');
+  nextButton.disabled = index >= total - 1 && !state.pendingRoundResolution;
+  nextButton.textContent = state.pendingRoundResolution ?
+    (round === 3 ? '➡ Ver ganador' : `➡ Iniciar bloque ${round + 1}`) : '➡ Siguiente pregunta';
 }
 
 window.addEventListener('DOMContentLoaded', () => {
