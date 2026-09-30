@@ -72,7 +72,14 @@ function arenaRender() {
   document.getElementById('arenaPink').disabled = answersLocked || resolved || !!state.activeTeam;
   document.getElementById('arenaBlue').disabled = answersLocked || resolved || !!state.activeTeam;
   const activeName = state.activeTeam === 'equipoA' ? 'Los Hermanos Dinamita del Retiro' : state.activeTeam === 'equipoB' ? 'Las Indestructibles Leyendas del Ahorro' : null;
-  document.getElementById('arenaTurnMessage').textContent = answersLocked ? 'Activa “3. Mostrar preguntas” para responder.' : resolved && state.isAnswerRevealed ? 'Respuesta correcta revelada. Pulsa “Siguiente pregunta” cuando estés listo.' : resolved ? round === 1 ? 'Ambos fallaron. Preparando la siguiente pregunta.' : 'Respuesta incorrecta. El otro equipo va en la siguiente pregunta.' : activeName ? `Turno de ${activeName}` : `Elige quién comienza el bloque ${round}.`;
+  let turnMessage;
+  if (answersLocked) turnMessage = 'Activa “3. Mostrar preguntas” para responder.';
+  else if (resolved && state.isAnswerRevealed && state.pendingRoundResolution?.round === 3) turnMessage = 'Respuesta correcta revelada. Pulsa “Ver ganador” cuando estés listo.';
+  else if (resolved && state.isAnswerRevealed && round === 3) turnMessage = `Respuesta correcta revelada. ${activeName} sigue al pulsar “Siguiente pregunta”.`;
+  else if (resolved && state.isAnswerRevealed) turnMessage = 'Respuesta correcta revelada. Pulsa “Siguiente pregunta” cuando estés listo.';
+  else if (resolved) turnMessage = round === 1 ? 'Ambos fallaron. Preparando la siguiente pregunta.' : 'Respuesta incorrecta. El otro equipo va en la siguiente pregunta.';
+  else turnMessage = activeName ? `Turno de ${activeName}` : `Elige quién comienza el bloque ${round}.`;
+  document.getElementById('arenaTurnMessage').textContent = turnMessage;
   document.getElementById('arenaStageTag').textContent = ({wait:'VIDEO DE ESPERA',presentation:'PRESENTACIÓN',questions:'PREGUNTAS'})[arenaStage] || 'PREGUNTAS';
   arenaRenderDots('arenaPink', pink, goal);
   arenaRenderDots('arenaBlue', blue, goal);

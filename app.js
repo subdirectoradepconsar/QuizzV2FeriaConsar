@@ -583,6 +583,11 @@ class TriviaApp {
     }
     this.state.resolvedQuestionKey = questionKey;
     this.state.isAnswerRevealed = true;
+    if (round === 3) {
+      this.state.activeTeam = key === 'equipoA' ? 'equipoB' : 'equipoA';
+      attempt.turnoSiguiente = this.state.activeTeam === 'equipoA'
+        ? 'Los Hermanos Dinamita del Retiro' : 'Las Indestructibles Leyendas del Ahorro';
+    }
     this.addAcierto(key, 1, true);
     this.sendAttemptWebhook(attempt);
     return true;
