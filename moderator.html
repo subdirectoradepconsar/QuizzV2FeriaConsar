@@ -10,6 +10,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="moderator-design.css">
   <script>
     tailwind.config = {
       theme: {
@@ -26,6 +27,24 @@
   </script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans select-none pb-12 touch-manipulation">
+
+  <div id="arenaPanel" class="arena-panel">
+    <header class="arena-header"><div class="arena-header-inner">
+      <div><div class="arena-kicker">CONSAR · CONTROL DE ARENA</div><h1>PANEL DE CONTROL</h1></div>
+      <div class="arena-header-badges"><span id="arenaRound">Primera ronda</span><span id="arenaQuestionCount">Pregunta 1/8</span><span id="arenaScore">💗 0 · 0 🔵</span></div>
+    </div></header>
+    <main class="arena-grid">
+      <section class="arena-card arena-scores"><h2>MARCADOR ACTUAL</h2><p>Elige el equipo que comienza cada bloque</p><p id="arenaTurnMessage" aria-live="polite">Elige quién comienza el bloque 1.</p>
+        <button type="button" class="arena-team arena-pink" id="arenaPink" onclick="arenaSelectTeam('ruda')"><span class="arena-team-top"><strong>LAS INDESTRUCTIBLES LEYENDAS DEL AHORRO</strong><b id="arenaPinkScore">0<small>ACIERTOS</small></b></span><span class="arena-dots" aria-label="Progreso de Las Indestructibles Leyendas del Ahorro"></span></button>
+        <button type="button" class="arena-team arena-blue" id="arenaBlue" onclick="arenaSelectTeam('tecnica')"><span class="arena-team-top"><strong>LOS HERMANOS DINAMITA DEL RETIRO</strong><b id="arenaBlueScore">0<small>ACIERTOS</small></b></span><span class="arena-dots" aria-label="Progreso de Los Hermanos Dinamita del Retiro"></span></button>
+      </section>
+      <section class="arena-card arena-main"><div class="arena-main-head"><div><div id="arenaRoundSelect" class="arena-round-select"></div><span id="arenaStageTag">VIDEO DE ESPERA</span></div><span id="arenaNumber">Pregunta 1 / 8</span></div>
+        <div id="arenaStageContent"></div>
+        <div class="arena-nav"><button type="button" id="arenaBack" onclick="arenaBack()">↩ Volver a la pregunta</button><button type="button" id="arenaNext" onclick="arenaNext()">➡ Siguiente pregunta</button></div>
+      </section>
+      <aside class="arena-side"><section class="arena-card"><h2>ORDEN DE FASES</h2><div id="arenaPhases"></div></section><section class="arena-card"><h2>SONIDOS</h2><button class="arena-bell" type="button" onclick="triviaApp.ringBell()">🔔 Tocar campana</button></section><section class="arena-card arena-reset"><button type="button" onclick="openResetModal()">🔄 Reiniciar combate</button></section></aside>
+    </main>
+  </div>
 
   <!-- Audio Element Preload for Boxing Bell -->
   <audio id="boxingBellAudio" src="Sonidocampanadebox.mp3" preload="auto"></audio>
@@ -135,22 +154,12 @@
         </div>
 
         <!-- Question Control Buttons Grid (Touch-friendly min 48px height) -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-4 border-t border-slate-800">
+        <div class="grid grid-cols-2 gap-3 mt-6 pt-4 border-t border-slate-800">
           <button onclick="prevQuestion()" class="min-h-[50px] px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1 active:scale-95 transition-all">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
             <span>Anterior</span>
           </button>
           
-          <button onclick="toggleVisibility()" id="btnToggleVisibility" class="min-h-[50px] px-3 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1 active:scale-95 transition-all">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-            <span>Lanzar</span>
-          </button>
-
-          <button onclick="revealAndPromptScore()" id="btnToggleReveal" class="min-h-[50px] px-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1 active:scale-95 transition-all shadow-md">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <span>Revelar</span>
-          </button>
-
           <button onclick="nextQuestion()" class="min-h-[50px] px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1 active:scale-95 transition-all">
             <span>Siguiente</span>
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
@@ -180,13 +189,13 @@
         <!-- Teams Score Card Grid -->
         <div class="grid grid-cols-1 gap-3">
           
-          <!-- Esquina Técnica (Equipo A) -->
+          <!-- Los Hermanos Dinamita del Retiro (Equipo A) -->
           <div class="bg-slate-950 border-2 border-sky-500/50 rounded-2xl p-3.5 text-center flex flex-col justify-between shadow-inner">
             <div>
-              <span class="text-xs font-black uppercase text-sky-400 tracking-wider">Esquina Técnica</span>
+              <span class="text-xs font-black uppercase text-sky-400 tracking-wider">Los Hermanos Dinamita del Retiro</span>
               
               <!-- Marcador Global de Rounds -->
-              <div class="text-2xl font-black text-amber-400 mt-1 mb-0.5" id="caidasTecnica">0 / 3 Rounds</div>
+              <div class="text-2xl font-black text-amber-400 mt-1 mb-0.5" id="caidasTecnica">0 Rounds</div>
               
               <!-- Aciertos del Round Activo -->
               <div class="text-xs font-bold text-sky-200 mb-1.5" id="scoreTecnicaText">Fase 1: Opción Múltiple</div>
@@ -198,13 +207,13 @@
             </div>
           </div>
 
-          <!-- Esquina Ruda (Equipo B) -->
+          <!-- Las Indestructibles Leyendas del Ahorro (Equipo B) -->
           <div class="bg-slate-950 border-2 border-rose-500/50 rounded-2xl p-3.5 text-center flex flex-col justify-between shadow-inner">
             <div>
-              <span class="text-xs font-black uppercase text-rose-400 tracking-wider">Esquina Ruda</span>
+              <span class="text-xs font-black uppercase text-rose-400 tracking-wider">Las Indestructibles Leyendas del Ahorro</span>
               
               <!-- Marcador Global de Rounds -->
-              <div class="text-2xl font-black text-amber-400 mt-1 mb-0.5" id="caidasRuda">0 / 3 Rounds</div>
+              <div class="text-2xl font-black text-amber-400 mt-1 mb-0.5" id="caidasRuda">0 Rounds</div>
               
               <!-- Aciertos del Round Activo -->
               <div class="text-xs font-bold text-rose-200 mb-1.5" id="scoreRudaText">Fase 1: Opción Múltiple</div>
@@ -236,11 +245,11 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <button onclick="assignPointToTeam('tecnica')" class="min-h-[60px] p-4 bg-sky-950 border-2 border-sky-500 rounded-2xl hover:bg-sky-900 active:scale-95 transition-all text-sky-200 font-extrabold text-base flex items-center justify-center gap-3 shadow-lg">
           <span class="text-2xl">🔵</span>
-          <span>Equipo Azul (Técnica) +1</span>
+          <span>Los Hermanos Dinamita del Retiro +1</span>
         </button>
         <button onclick="assignPointToTeam('ruda')" class="min-h-[60px] p-4 bg-rose-950 border-2 border-rose-500 rounded-2xl hover:bg-rose-900 active:scale-95 transition-all text-rose-200 font-extrabold text-base flex items-center justify-center gap-3 shadow-lg">
           <span class="text-2xl">🔴</span>
-          <span>Equipo Rojo (Ruda) +1</span>
+          <span>Las Indestructibles Leyendas del Ahorro +1</span>
         </button>
       </div>
 
@@ -257,13 +266,7 @@
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
       </div>
       <h3 class="text-xl font-bold text-white mb-2">Reiniciar Marcador y Rounds</h3>
-      <p class="text-xs text-slate-400 mb-4">Ingresa el PIN de moderador para confirmar el reseteo (PIN por defecto: <span class="text-amber-400 font-mono">1234</span>).</p>
-      
-      <input type="password" id="pinInput" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="1234" onkeyup="if(event.key==='Enter') confirmReset()" class="w-36 mx-auto text-center text-2xl tracking-widest bg-slate-950 border border-slate-700 text-white rounded-xl py-2 mb-2 focus:border-amber-400 focus:outline-none">
-      
-      <div id="pinErrorMsg" class="text-xs text-rose-400 font-bold mb-4 hidden">
-        ❌ PIN incorrecto. Intenta de nuevo.
-      </div>
+      <p class="text-xs text-slate-400 mb-4">Se reiniciarán el marcador y las preguntas.</p>
 
       <div class="grid grid-cols-2 gap-3 mt-2">
         <button onclick="closeResetModal()" class="min-h-[48px] py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-sm">Cancelar</button>
@@ -282,7 +285,7 @@
       </div>
       <h3 class="text-3xl font-black text-yellow-400 mb-2">¡Pelea Finalizada!</h3>
       <p class="text-xl text-white mb-3 font-bold">
-        Ganador: <span class="text-amber-300 font-extrabold text-2xl uppercase" id="modVictoryWinnerName">Esquina Técnica</span>
+        Ganador: <span class="text-amber-300 font-extrabold text-2xl uppercase" id="modVictoryWinnerName">Los Hermanos Dinamita del Retiro</span>
       </p>
 
       <div class="p-3.5 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 text-xs font-semibold mb-6 flex flex-col items-center gap-1.5 shadow-inner">
@@ -347,7 +350,7 @@
       }
 
       if (isGameOver && !victoryModalDismissed) {
-        const winner = currentState.equipoGanador || (equipoA_Rounds >= 3 ? 'Esquina Técnica' : 'Esquina Ruda');
+        const winner = currentState.equipoGanador || (equipoA_Rounds >= 3 ? 'Los Hermanos Dinamita del Retiro' : 'Las Indestructibles Leyendas del Ahorro');
         document.getElementById('modVictoryWinnerName').innerText = winner;
         document.getElementById('modVictoryMatchIdText').innerText = `Partida: ${currentState.idPartida || "PART-001"}`;
         if (modVictoryModal) {
@@ -363,7 +366,7 @@
 
       // Header status guide & Webhook badge
       document.getElementById('headerMatchId').innerText = currentState.idPartida || "PART-001";
-      document.getElementById('headerGlobalScore').innerText = `Equipo A (Técnica): ${equipoA_Rounds} R | Equipo B (Ruda): ${equipoB_Rounds} R`;
+      document.getElementById('headerGlobalScore').innerText = `Hermanos Dinamita: ${equipoA_Rounds} R | Leyendas del Ahorro: ${equipoB_Rounds} R`;
 
       const webhookBadge = document.getElementById('headerWebhookBadge');
       if (webhookBadge) {
@@ -437,7 +440,7 @@
                 <span class="text-2xl">🔵</span>
                 <div class="text-left leading-tight">
                   <div class="text-xs text-sky-400 uppercase font-bold">Punto para</div>
-                  <div>Equipo Azul (Técnica)</div>
+                  <div>Los Hermanos Dinamita del Retiro</div>
                 </div>
               </button>
               
@@ -445,7 +448,7 @@
                 <span class="text-2xl">🔴</span>
                 <div class="text-left leading-tight">
                   <div class="text-xs text-rose-400 uppercase font-bold">Punto para</div>
-                  <div>Equipo Rojo (Ruda)</div>
+                  <div>Las Indestructibles Leyendas del Ahorro</div>
                 </div>
               </button>
             </div>
@@ -558,16 +561,13 @@
     let autoNextTimeout = null;
     let isProcessingAction = false;
 
-    function scheduleAutoNextQuestion(delayMs = 1800) {
+    function scheduleAutoNextQuestion(delayMs = 1800, expectedRound = currentState?.round_activo, expectedQuestion = currentState?.questionIndex) {
       cancelAutoNextQuestion();
-      const startQIdx = currentState ? currentState.questionIndex : 0;
-      const startRound = currentState ? currentState.round_activo : 1;
-
       autoNextTimeout = setTimeout(() => {
-        if (currentState && !currentState.juego_terminado) {
-          if (currentState.questionIndex === startQIdx && currentState.round_activo === startRound) {
-            nextQuestion();
-          }
+        if (currentState && !currentState.juego_terminado &&
+            currentState.questionIndex === expectedQuestion &&
+            currentState.round_activo === expectedRound) {
+          nextQuestion();
         }
       }, delayMs);
     }
@@ -592,12 +592,11 @@
         const total = TRIVIA_QUESTIONS[currentState.versionId].questions.length;
         if (currentState.questionIndex < total - 1) {
           triviaApp.setQuestionIndex(currentState.questionIndex + 1);
+        } else if (currentState.round_activo === 1 &&
+                   currentState.resolvedQuestionKey === `1:${currentState.questionIndex}`) {
+          triviaApp.setQuestionIndex(0);
         }
       }
-    }
-
-    function toggleVisibility() {
-      triviaApp.toggleQuestionVisible();
     }
 
     function revealAndPromptScore() {
@@ -648,14 +647,8 @@
       }
     }
 
-    // Modal: Reset PIN
+    // Confirmación de reinicio
     function openResetModal() {
-      const pinEl = document.getElementById('pinInput');
-      if (pinEl) {
-        pinEl.value = '';
-        setTimeout(() => pinEl.focus(), 100);
-      }
-      document.getElementById('pinErrorMsg').classList.add('hidden');
       document.getElementById('resetModal').classList.remove('hidden');
       document.getElementById('resetModal').classList.add('flex');
     }
@@ -675,7 +668,7 @@
     }
 
     function resetMatchDirectly() {
-      triviaApp.resetAll("1234");
+      triviaApp.resetAll();
       closeResetModal();
       const modVictoryModal = document.getElementById('moderatorVictoryModal');
       if (modVictoryModal) {
@@ -685,20 +678,16 @@
     }
 
     function confirmReset() {
-      const pin = document.getElementById('pinInput').value;
-      if (triviaApp.resetAll(pin)) {
+      if (triviaApp.resetAll()) {
         closeResetModal();
         const modVictoryModal = document.getElementById('moderatorVictoryModal');
         if (modVictoryModal) {
           modVictoryModal.classList.add('hidden');
           modVictoryModal.classList.remove('flex');
         }
-      } else {
-        document.getElementById('pinErrorMsg').classList.remove('hidden');
-        document.getElementById('pinInput').value = '';
-        document.getElementById('pinInput').focus();
       }
     }
   </script>
+  <script src="moderator-design.js"></script>
 </body>
 </html>

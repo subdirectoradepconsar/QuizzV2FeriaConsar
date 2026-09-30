@@ -1,0 +1,52 @@
+/* Marcador dimensionado para una pantalla de referencia de 1400 × 900. */
+.victoria-overlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:clamp(10px,2.2vmin,28px);background:rgba(2,6,23,.96);backdrop-filter:blur(14px);overflow-y:auto}
+.victoria-overlay.hidden{display:none}
+.victoria-card{box-sizing:border-box;width:min(100%,1040px);max-height:100%;overflow-y:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(7px,1.5vmin,18px);padding:clamp(14px,3vmin,34px);border:3px solid #facc15;border-radius:clamp(18px,3vmin,30px);background:radial-gradient(circle at 50% 5%,#50310d 0,#191b2b 42%,#080e1e 100%);box-shadow:0 20px 70px rgba(0,0,0,.65);text-align:center}
+.victoria-trophy{font-size:clamp(38px,8vmin,74px);line-height:1}
+.victoria-title{margin:0;color:#ffcf36;font-family:Bangers,cursive;font-size:clamp(32px,6.5vmin,72px);line-height:1.02;letter-spacing:.02em;text-wrap:balance}
+.victoria-kicker{margin:0;color:#fef0b3;font-size:clamp(14px,2.5vmin,26px);font-weight:900;letter-spacing:.08em;line-height:1.2}
+.victoria-logo-frame{box-sizing:border-box;width:100%;min-height:0;display:flex;align-items:center;justify-content:center;padding:clamp(6px,1.2vmin,12px);border:2px solid #facc15;border-radius:18px;background:#030817}
+.victoria-logo{display:block;width:100%;height:auto;max-height:min(43vh,370px);object-fit:contain}
+.victoria-winner-name{margin:0;color:#ffe88b;font-size:clamp(15px,2.3vmin,23px);font-weight:900;line-height:1.2;text-wrap:balance}
+.victoria-footer{margin:0;color:#e2e8f0;font-size:clamp(14px,2vmin,20px);font-weight:800;line-height:1.25}
+@media(max-height:600px){.victoria-card{gap:5px;padding:12px}.victoria-trophy{font-size:34px}.victoria-title{font-size:clamp(28px,5vmin,42px)}.victoria-logo{max-height:36vh}}
+@media (min-width: 1100px) {
+  #screenBody > header {
+    max-width: 1400px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(270px, 320px) minmax(0, 1fr);
+    gap: 16px;
+    min-height: 180px;
+    align-items: center;
+  }
+  #screenBody > header > div:first-child,
+  #screenBody > header > div:last-child {
+    min-width: 0;
+    min-height: 150px;
+    width: 100%;
+    padding: 18px;
+    gap: 12px;
+  }
+  #screenBody > header > div:first-child img,
+  #screenBody > header > div:last-child img {
+    width: clamp(155px, 15vw, 210px);
+    height: clamp(95px, 9vw, 126px);
+    object-fit: contain;
+  }
+  #screenBody > header > div:first-child span:first-child,
+  #screenBody > header > div:last-child span:first-child {
+    font-size: clamp(17px, 1.5vw, 21px);
+    line-height: 1.18;
+  }
+  #caidasTecnica, #caidasRuda { font-size: 15px; padding: 4px 8px; }
+  #screenBody > header > div:nth-child(2) > div:nth-child(2) { padding: 12px 20px; }
+  #scoreGlobalText { font-size: clamp(48px, 4.3vw, 64px); line-height: 1; }
+  #roundGoalBadge { font-size: 14px; line-height: 1.2; }
+  #screenBody > main { max-width: 1400px; }
+}
+@media (max-width: 1099px) {
+  #screenBody > header { flex-wrap: wrap; justify-content: center; }
+  #screenBody > header > div:first-child,
+  #screenBody > header > div:last-child { flex: 1 1 300px; }
+  #screenBody > header > div:nth-child(2) { order: -1; width: 100%; }
+}

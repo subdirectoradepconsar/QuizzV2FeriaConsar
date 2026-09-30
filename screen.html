@@ -10,6 +10,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="screen-layout.css">
   <script>
     tailwind.config = {
       theme: {
@@ -27,21 +28,33 @@
 </head>
 <body class="bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 min-h-screen text-white flex flex-col justify-between p-4 md:p-8 select-none overflow-hidden" id="screenBody">
 
+  <!-- Material de presentación controlado desde el panel del moderador -->
+  <div id="presentationScreen" class="hidden" style="position:fixed;inset:0;z-index:100;background:#000;align-items:center;justify-content:center">
+    <video id="waitingVideo" src="video-presentacion.mp4" poster="presentacion.png" autoplay muted loop playsinline style="display:none;width:100%;height:100%;object-fit:contain"></video>
+    <img id="presentationImage" src="presentacion.png" alt="Los Hermanos Dinamita del Retiro contra Las Indestructibles Leyendas del Ahorro" style="display:none;width:100%;height:100%;object-fit:contain">
+  </div>
+  <div id="turnOverlay" class="fixed inset-0 hidden items-center justify-center z-[110] bg-slate-950/85 p-6">
+    <div class="glass-panel-gold animate-score-burst rounded-3xl p-10 text-center max-w-4xl w-full">
+      <div class="text-amber-400 font-black uppercase tracking-widest text-xl mb-3">Turno de</div>
+      <div id="turnOverlayTeam" class="font-lucha text-5xl md:text-7xl text-white leading-tight"></div>
+    </div>
+  </div>
+
   <!-- Audio Element Preload for Boxing Bell -->
   <audio id="boxingBellAudio" src="Sonidocampanadebox.mp3" preload="auto"></audio>
+  <audio id="correctAnswerAudio" src="Aplausos-corto.mp3" preload="auto"></audio>
+  <audio id="wrongAnswerAudio" src="Gritos-corto.mp3" preload="auto"></audio>
 
   <!-- TOP BAR: CONSAR Branding & Ring Scoreboard Counters -->
   <header class="w-full max-w-7xl mx-auto flex items-center justify-between gap-4 pb-4 border-b border-amber-500/30 relative z-10">
     
-    <!-- Esquina Técnica Corner Badge -->
+    <!-- Los Hermanos Dinamita del Retiro Corner Badge -->
     <div class="flex items-center gap-4 bg-slate-900/90 border-2 border-sky-500/60 rounded-2xl px-5 py-3 shadow-lg shadow-sky-500/20 backdrop-blur-md min-w-[280px]">
-      <div class="w-14 h-14 rounded-xl bg-sky-600 flex items-center justify-center font-lucha text-3xl text-white shadow-md flex-shrink-0">
-        🤼‍♂️
-      </div>
+      <img src="dinamita.png" alt="Logo de Los Hermanos Dinamita del Retiro" class="w-32 h-16 lg:w-40 lg:h-20 object-contain rounded-xl bg-black flex-shrink-0" />
       <div class="flex-1">
-        <span class="text-xs font-black uppercase text-sky-400 tracking-wider block">Esquina Técnica</span>
+        <span class="text-xs font-black uppercase text-sky-400 tracking-wider block">Los Hermanos Dinamita del Retiro</span>
         <div class="flex items-center gap-2 mb-1.5">
-          <span class="text-xs font-bold text-sky-200 bg-sky-950 px-2 py-0.5 rounded border border-sky-500/40" id="caidasTecnica">0 / 3 Rounds</span>
+          <span class="text-xs font-bold text-sky-200 bg-sky-950 px-2 py-0.5 rounded border border-sky-500/40" id="caidasTecnica">0 Rounds</span>
         </div>
         <!-- Círculos de Progreso Aciertos -->
         <div class="flex items-center gap-2" id="dotsTecnica">
@@ -68,21 +81,19 @@
       </span>
     </div>
 
-    <!-- Esquina Ruda Corner Badge -->
+    <!-- Las Indestructibles Leyendas del Ahorro Corner Badge -->
     <div class="flex items-center gap-4 bg-slate-900/90 border-2 border-rose-500/60 rounded-2xl px-5 py-3 shadow-lg shadow-rose-500/20 backdrop-blur-md min-w-[280px]">
       <div class="text-right flex-1">
-        <span class="text-xs font-black uppercase text-rose-400 tracking-wider block">Esquina Ruda</span>
+        <span class="text-xs font-black uppercase text-rose-400 tracking-wider block">Las Indestructibles Leyendas del Ahorro</span>
         <div class="flex items-center gap-2 justify-end mb-1.5">
-          <span class="text-xs font-bold text-rose-200 bg-rose-950 px-2 py-0.5 rounded border border-rose-500/40" id="caidasRuda">0 / 3 Rounds</span>
+          <span class="text-xs font-bold text-rose-200 bg-rose-950 px-2 py-0.5 rounded border border-rose-500/40" id="caidasRuda">0 Rounds</span>
         </div>
         <!-- Círculos de Progreso Aciertos -->
         <div class="flex items-center gap-2 justify-end" id="dotsRuda">
           <!-- Dinámico via JS -->
         </div>
       </div>
-      <div class="w-14 h-14 rounded-xl bg-rose-600 flex items-center justify-center font-lucha text-3xl text-white shadow-md flex-shrink-0">
-        🤼‍♀️
-      </div>
+      <img src="leyendas.png" alt="Logo de Las Indestructibles Leyendas del Ahorro" class="w-32 h-16 lg:w-40 lg:h-20 object-contain rounded-xl bg-black flex-shrink-0" />
     </div>
 
   </header>
@@ -142,7 +153,7 @@
         ¡ACIERTO SUMADO!
       </h3>
       <p class="text-2xl font-black text-white" id="overlaySubtitle">
-        Esquina Técnica
+        Los Hermanos Dinamita del Retiro
       </p>
     </div>
   </div>
@@ -153,11 +164,11 @@
       <div class="text-8xl mb-4 animate-bounce">
         🔔
       </div>
-      <h3 class="text-5xl md:text-7xl font-lucha tracking-wider text-amber-400 mb-2 drop-shadow-lg">
+      <h3 class="text-5xl md:text-7xl font-lucha tracking-wider text-amber-400 mb-2 drop-shadow-lg" id="roundGanadoTitle">
         ¡ROUND SUPERADO!
       </h3>
       <p class="text-2xl md:text-3xl font-black text-white mb-4" id="roundWinnerTeam">
-        Esquina Técnica
+        Los Hermanos Dinamita del Retiro
       </p>
       <span class="inline-block px-6 py-2 bg-amber-500 text-slate-950 font-black rounded-full text-base tracking-wider uppercase shadow-lg" id="roundGanadoSubtitle">
         ¡Avanza a la siguiente fase del Gran Combate!
@@ -166,29 +177,16 @@
   </div>
 
   <!-- OVERLAY: Victoria Global Animation (Fin de la Pelea) -->
-  <div id="victoriaGlobalOverlay" class="fixed inset-0 bg-slate-950/95 backdrop-blur-xl hidden items-center justify-center z-50 p-4">
-    <div class="bg-gradient-to-br from-amber-950 via-slate-900 to-yellow-950 rounded-3xl p-10 md:p-14 max-w-3xl w-full text-center border-4 border-yellow-400 animate-score-burst shadow-2xl relative overflow-hidden">
-      <!-- Glow Decorativo -->
-      <div class="absolute -top-24 -left-24 w-56 h-56 bg-yellow-500/20 rounded-full blur-3xl"></div>
-      <div class="absolute -bottom-24 -right-24 w-56 h-56 bg-amber-500/20 rounded-full blur-3xl"></div>
-      
-      <div class="text-7xl md:text-9xl mb-4 animate-bounce">
-        🏆
+  <div id="victoriaGlobalOverlay" class="victoria-overlay hidden">
+    <div class="victoria-card animate-score-burst">
+      <div class="victoria-trophy" aria-hidden="true">🏆</div>
+      <h3 class="victoria-title">¡GANADOR DE LA PARTIDA!</h3>
+      <p class="victoria-kicker">CAMPEÓN DEL GRAN COMBATE</p>
+      <div class="victoria-logo-frame">
+        <img id="victoriaWinnerLogo" class="victoria-logo" src="dinamita.png" alt="Logo de Los Hermanos Dinamita del Retiro">
       </div>
-      <h3 class="text-4xl md:text-6xl lg:text-7xl font-lucha tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 mb-3 drop-shadow-lg uppercase">
-        ¡GANADOR DE LA PARTIDA!
-      </h3>
-      <p class="text-xl md:text-3xl font-black text-amber-200 uppercase tracking-widest mb-6">
-        CAMPEÓN DEL GRAN COMBATE:
-      </p>
-      <div class="py-4 px-8 rounded-2xl bg-slate-950/90 border-4 border-yellow-400 inline-block shadow-2xl mb-6">
-        <span class="text-4xl md:text-6xl lg:text-7xl font-black text-amber-300 drop-shadow-md tracking-tight uppercase" id="victoriaWinnerTeam">
-          ¡ESQUINA TÉCNICA!
-        </span>
-      </div>
-      <p class="text-base md:text-xl font-bold text-slate-300">
-        🏆 ¡Victoria por 3 - 0 al conquistar los 3 Rounds en el Gran Combate CONSAR! 🏆
-      </p>
+      <p class="victoria-winner-name" id="victoriaWinnerTeam">Los Hermanos Dinamita del Retiro</p>
+      <p class="victoria-footer">¡Victoria en el Gran Combate CONSAR!</p>
     </div>
   </div>
 
@@ -216,6 +214,13 @@
     let prevAciertos = { equipoA: 0, equipoB: 0 };
     let prevRounds = { equipoA: 0, equipoB: 0 };
 
+    function playAnswerAudio(id) {
+      const audio = document.getElementById(id);
+      if (!audio) return;
+      audio.currentTime = 0;
+      audio.play().catch(error => console.warn('No se pudo reproducir el sonido de respuesta:', error));
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       // Audio Context Unlock on User Interaction
       document.body.addEventListener('click', () => {
@@ -228,6 +233,7 @@
     });
 
     function handleStateUpdate(state, actionEvent) {
+      renderPresentationScreen(state.screenPhase || 'questions', actionEvent?.type === 'RESET_ALL');
       const currentVersion = TRIVIA_QUESTIONS[state.versionId] || TRIVIA_QUESTIONS.version1;
       const questionsList = currentVersion.questions || [];
       const qIdx = Math.min(Math.max(0, state.questionIndex || 0), Math.max(0, questionsList.length - 1));
@@ -271,28 +277,36 @@
           const rawTeam = (actionEvent.team || '').toLowerCase();
           const rawTeamName = actionEvent.teamName || '';
           
-          let resolvedTeamName = 'Esquina Técnica';
-          if (rawTeam === 'equipoB' || rawTeam === 'ruda' || rawTeam === 'esquinaruda' || rawTeamName === 'Esquina Ruda') {
-            resolvedTeamName = 'Esquina Ruda';
-          } else if (rawTeam === 'equipoa' || rawTeam === 'tecnica' || rawTeam === 'esquinatecnica' || rawTeamName === 'Esquina Técnica') {
-            resolvedTeamName = 'Esquina Técnica';
+          let resolvedTeamName = 'Los Hermanos Dinamita del Retiro';
+          if (rawTeam === 'equipoB' || rawTeam === 'ruda' || rawTeam === 'esquinaruda' || rawTeamName === 'Las Indestructibles Leyendas del Ahorro') {
+            resolvedTeamName = 'Las Indestructibles Leyendas del Ahorro';
+          } else if (rawTeam === 'equipoa' || rawTeam === 'tecnica' || rawTeam === 'esquinatecnica' || rawTeamName === 'Los Hermanos Dinamita del Retiro') {
+            resolvedTeamName = 'Los Hermanos Dinamita del Retiro';
           } else if (equipoB_Rounds > equipoA_Rounds) {
-            resolvedTeamName = 'Esquina Ruda';
+            resolvedTeamName = 'Las Indestructibles Leyendas del Ahorro';
           } else {
-            resolvedTeamName = 'Esquina Técnica';
+            resolvedTeamName = 'Los Hermanos Dinamita del Retiro';
           }
 
           if (type === "ROUND_GANADO") {
-            triggerRoundGanadoOverlay(resolvedTeamName);
+            triggerRoundGanadoOverlay(resolvedTeamName, actionEvent.roundGanado);
             triviaApp.playBellSound();
+            playAnswerAudio('correctAnswerAudio');
           } else if (type === "VICTORIA_GLOBAL") {
             const winner = state.equipoGanador || resolvedTeamName;
             triggerVictoriaGlobalOverlay(winner);
+            playAnswerAudio('correctAnswerAudio');
           } else if (type === "ADD_POINT") {
-            const icon = resolvedTeamName === 'Esquina Técnica' ? "🔵" : "🔴";
+            const icon = resolvedTeamName === 'Los Hermanos Dinamita del Retiro' ? "🔵" : "🔴";
             triggerPointOverlay(resolvedTeamName, icon);
             triviaApp.triggerConfetti();
-            triviaApp.playPointSound();
+            playAnswerAudio('correctAnswerAudio');
+          } else if (type === "TURN_CHANGED") {
+            showTurnOverlay(actionEvent.teamName || resolvedTeamName);
+          } else if (type === "ATTEMPT_WRONG") {
+            triggerIncorrectOverlay();
+            playAnswerAudio('wrongAnswerAudio');
+            setTimeout(() => showTurnOverlay(actionEvent.nextTeamName), 1300);
           } else if (type === "TRIGGER_INCORRECT") {
             triggerIncorrectOverlay();
             triviaApp.playBuzzerSound();
@@ -303,7 +317,7 @@
       }
 
       if (state.juego_terminado && (!actionEvent || actionEvent.type !== "ROUND_GANADO")) {
-        const winner = state.equipoGanador || (equipoB_Rounds > equipoA_Rounds ? 'Esquina Ruda' : 'Esquina Técnica');
+        const winner = state.equipoGanador || (equipoB_Rounds > equipoA_Rounds ? 'Las Indestructibles Leyendas del Ahorro' : 'Los Hermanos Dinamita del Retiro');
         triggerVictoriaGlobalOverlay(winner);
       } else {
         const overlay = document.getElementById('victoriaGlobalOverlay');
@@ -429,6 +443,38 @@
       }
     }
 
+    function renderPresentationScreen(phase, restartVideo = false) {
+      const overlay = document.getElementById('presentationScreen');
+      const video = document.getElementById('waitingVideo');
+      const image = document.getElementById('presentationImage');
+      const showVideo = phase === 'wait';
+      const showImage = phase === 'presentation';
+      overlay.style.display = showVideo || showImage ? 'flex' : 'none';
+      video.style.display = showVideo ? 'block' : 'none';
+      image.style.display = showImage ? 'block' : 'none';
+      if (showVideo) {
+        if (restartVideo) video.currentTime = 0;
+        if (video.paused) video.play().catch(() => {});
+      } else if (!video.paused) {
+        video.pause();
+        video.currentTime = 0;
+      }
+    }
+
+    let turnOverlayTimer = null;
+    function showTurnOverlay(teamName) {
+      if (!teamName) return;
+      const overlay = document.getElementById('turnOverlay');
+      document.getElementById('turnOverlayTeam').textContent = teamName;
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+      clearTimeout(turnOverlayTimer);
+      turnOverlayTimer = setTimeout(() => {
+        overlay.classList.add('hidden');
+        overlay.classList.remove('flex');
+      }, 1700);
+    }
+
     function renderProgressDots(containerId, count, goal, teamClass) {
       const container = document.getElementById(containerId);
       if (!container) return;
@@ -455,9 +501,11 @@
       }, 1600);
     }
 
-    function triggerRoundGanadoOverlay(teamName) {
+    function triggerRoundGanadoOverlay(teamName, roundGanado) {
       const overlay = document.getElementById('roundGanadoOverlay');
       document.getElementById('roundWinnerTeam').innerText = teamName;
+      document.getElementById('roundGanadoTitle').innerText = roundGanado === 1 ? '¡INICIA EL BLOQUE 2!' : '¡ROUND SUPERADO!';
+      document.getElementById('roundGanadoSubtitle').innerText = roundGanado === 1 ? 'Ganó el derecho de empezar; el marcador sigue 0–0.' : '¡Avanza a la siguiente fase del Gran Combate!';
 
       overlay.classList.remove('hidden');
       overlay.classList.add('flex');
@@ -471,10 +519,12 @@
     function triggerVictoriaGlobalOverlay(teamName) {
       const overlay = document.getElementById('victoriaGlobalOverlay');
       const winnerEl = document.getElementById('victoriaWinnerTeam');
-      if (winnerEl) {
-        let cleanName = teamName.toUpperCase().replace(/^¡|!$/g, '');
-        winnerEl.innerText = `¡${cleanName}!`;
-      }
+      const isLeyendas = /leyendas|rojo|ruda|equipob/i.test(teamName || '');
+      const winnerName = isLeyendas ? 'Las Indestructibles Leyendas del Ahorro' : 'Los Hermanos Dinamita del Retiro';
+      const winnerLogo = document.getElementById('victoriaWinnerLogo');
+      winnerLogo.src = isLeyendas ? 'leyendas.png' : 'dinamita.png';
+      winnerLogo.alt = `Logo de ${winnerName}`;
+      winnerEl.innerText = winnerName;
 
       overlay.classList.remove('hidden');
       overlay.classList.add('flex');
