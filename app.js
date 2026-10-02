@@ -35,6 +35,12 @@ const DEFAULT_QUESTION_INDEX_POR_RONDA = () => ({
   ronda3: 0
 });
 
+const DEFAULT_PROGRESS_POR_RONDA = () => ({
+  ronda1: null,
+  ronda2: null,
+  ronda3: null
+});
+
 function syncAciertosState(state) {
   if (!state.aciertos_por_ronda) {
     state.aciertos_por_ronda = DEFAULT_ACIERTOS_POR_RONDA();
@@ -81,6 +87,7 @@ const DEFAULT_STATE = {
   versionId: "version1",
   questionIndex: 0,
   question_index_por_ronda: DEFAULT_QUESTION_INDEX_POR_RONDA(),
+  progress_por_ronda: DEFAULT_PROGRESS_POR_RONDA(),
   isQuestionVisible: true,
   isAnswerRevealed: false,
   screenPhase: "questions",
@@ -237,7 +244,8 @@ class TriviaApp {
           respuestas: loaded.respuestas ? {
             equipoA: { ...DEFAULT_RESPUESTAS().equipoA, ...(loaded.respuestas.equipoA || {}) },
             equipoB: { ...DEFAULT_RESPUESTAS().equipoB, ...(loaded.respuestas.equipoB || {}) }
-          } : DEFAULT_RESPUESTAS()
+          } : DEFAULT_RESPUESTAS(),
+          progress_por_ronda: { ...DEFAULT_PROGRESS_POR_RONDA(), ...(loaded.progress_por_ronda || {}) }
         };
         syncAciertosState(loadedState);
         return loadedState;
@@ -251,6 +259,7 @@ class TriviaApp {
   }
 
   saveAndSyncState(actionEvent = null) {
+    this.rememberRoundProgress();
     this.state.timestamp = Date.now();
 
     // Actualizar alias retrocompatibles (tecnica = equipoA, ruda = equipoB)
@@ -288,6 +297,7 @@ class TriviaApp {
       versionId: this.state.versionId || "version1",
       questionIndex: this.state.questionIndex !== undefined ? this.state.questionIndex : 0,
       question_index_por_ronda: this.state.question_index_por_ronda || DEFAULT_QUESTION_INDEX_POR_RONDA(),
+      progress_por_ronda: this.state.progress_por_ronda || DEFAULT_PROGRESS_POR_RONDA(),
       isQuestionVisible: this.state.isQuestionVisible !== undefined ? this.state.isQuestionVisible : true,
       isAnswerRevealed: this.state.isAnswerRevealed !== undefined ? this.state.isAnswerRevealed : false,
       screenPhase: this.state.screenPhase || "questions",
@@ -391,13 +401,12 @@ class TriviaApp {
     const currentRound = this.state.round_activo || 1;
     const roundChanged = (prevRound !== undefined && prevRound !== currentRound);
 
-    if (roundChanged) {
-      // Al cambiar de ronda, siempre reiniciar el índice de pregunta a 0
-      this.state.questionIndex = 0;
-      this.state.question_index_por_ronda[`ronda${currentRound}`] = 0;
-    } else if (newState.questionIndex !== undefined) {
+    if (newState.questionIndex !== undefined) {
       this.state.questionIndex = newState.questionIndex;
       this.state.question_index_por_ronda[`ronda${currentRound}`] = newState.questionIndex;
+    } else if (roundChanged) {
+      this.state.questionIndex = 0;
+      this.state.question_index_por_ronda[`ronda${currentRound}`] = 0;
     }
 
     if (newState.isQuestionVisible !== undefined) {
@@ -405,6 +414,10 @@ class TriviaApp {
     }
     if (newState.isAnswerRevealed !== undefined) {
       this.state.isAnswerRevealed = newState.isAnswerRevealed;
+    }
+
+    if (newState.progress_por_ronda) {
+      this.state.progress_por_ronda = { ...DEFAULT_PROGRESS_POR_RONDA(), ...newState.progress_por_ronda };
     }
     if (newState.screenPhase !== undefined) {
       this.state.screenPhase = newState.screenPhase;
@@ -455,24 +468,38 @@ class TriviaApp {
     this.listeners.forEach(cb => cb(this.state, actionEvent));
   }
 
+  rememberRoundProgress() {
+    const roundKey = `ronda${this.state.round_activo || 1}`;
+    if (!this.state.progress_por_ronda) this.state.progress_por_ronda = DEFAULT_PROGRESS_POR_RONDA();
+    this.state.progress_por_ronda[roundKey] = {
+      questionIndex: this.state.questionIndex || 0,
+      activeTeam: this.state.activeTeam || null,
+      resolvedQuestionKey: this.state.resolvedQuestionKey || null,
+      pendingRoundResolution: this.state.pendingRoundResolution || null,
+      isAnswerRevealed: !!this.state.isAnswerRevealed
+    };
+  }
+
   setRound(roundNum) {
     if (roundNum >= 1 && roundNum <= 3) {
+      this.rememberRoundProgress();
+      const saved = this.state.progress_por_ronda[`ronda${roundNum}`];
       this.state.round_activo = roundNum;
       this.state.versionId = `version${roundNum}`;
-      this.state.questionIndex = 0;
+      this.state.questionIndex = saved?.questionIndex || 0;
       if (!this.state.question_index_por_ronda) {
         this.state.question_index_por_ronda = DEFAULT_QUESTION_INDEX_POR_RONDA();
       }
-      this.state.question_index_por_ronda[`ronda${roundNum}`] = 0;
-      this.state.isAnswerRevealed = false;
+      this.state.question_index_por_ronda[`ronda${roundNum}`] = this.state.questionIndex;
+      this.state.isAnswerRevealed = !!saved?.isAnswerRevealed;
       this.state.isQuestionVisible = true;
-      this.state.activeTeam = null;
-      this.state.resolvedQuestionKey = null;
-      this.state.pendingRoundResolution = null;
+      this.state.activeTeam = saved?.activeTeam || null;
+      this.state.resolvedQuestionKey = saved?.resolvedQuestionKey || null;
+      this.state.pendingRoundResolution = saved?.pendingRoundResolution || null;
 
       syncAciertosState(this.state);
 
-      this.saveAndSyncState({ type: "SET_ROUND", action: "ACTUALIZAR_MARCADOR", round_activo: roundNum, questionIndex: 0 });
+      this.saveAndSyncState({ type: "SET_ROUND", action: "ACTUALIZAR_MARCADOR", round_activo: roundNum, questionIndex: this.state.questionIndex });
     }
   }
 
@@ -584,7 +611,7 @@ class TriviaApp {
     }
     this.state.resolvedQuestionKey = questionKey;
     this.state.isAnswerRevealed = true;
-    if (round === 3) {
+    if (round === 2 || round === 3) {
       this.state.activeTeam = key === 'equipoA' ? 'equipoB' : 'equipoA';
       attempt.turnoSiguiente = this.state.activeTeam === 'equipoA'
         ? 'Los Hermanos Dinamita del Retiro' : 'Las Indestructibles Leyendas del Ahorro';
@@ -749,6 +776,7 @@ class TriviaApp {
           questionIndex: 0
         };
 
+        this.rememberRoundProgress();
         this.state.round_activo = siguienteRoundNum;
         this.state.versionId = `version${siguienteRoundNum}`;
         this.state.activeTeam = key;
@@ -788,6 +816,7 @@ class TriviaApp {
           questionIndex: 0
         };
 
+        this.rememberRoundProgress();
         this.state.round_activo = siguienteRoundNum;
         this.state.versionId = `version${siguienteRoundNum}`;
         this.state.activeTeam = null;
@@ -892,6 +921,7 @@ class TriviaApp {
         scoreB
       };
 
+      this.rememberRoundProgress();
       this.state.round_activo = siguienteRoundNum;
       this.state.versionId = `version${siguienteRoundNum}`;
       this.state.activeTeam = null;
@@ -1075,6 +1105,7 @@ class TriviaApp {
     this.state.caidas = { tecnica: 0, ruda: 0 };
     this.state.questionIndex = 0;
     this.state.question_index_por_ronda = DEFAULT_QUESTION_INDEX_POR_RONDA();
+    this.state.progress_por_ronda = DEFAULT_PROGRESS_POR_RONDA();
     this.state.isAnswerRevealed = false;
     this.state.isQuestionVisible = true;
     this.state.screenPhase = "wait";

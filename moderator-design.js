@@ -146,12 +146,15 @@ function arenaRender() {
         content.appendChild(button);
       });
     }
-  document.getElementById('arenaBack').disabled = index === 0 || !!state.pendingRoundResolution;
+  const backButton = document.getElementById('arenaBack');
+  backButton.disabled = index === 0 || !!state.pendingRoundResolution;
+  backButton.textContent = correctAnswer ? '↩ Volver a la pregunta anterior' : '↩ Volver a la pregunta';
   const nextButton = document.getElementById('arenaNext');
   nextButton.disabled = index >= total - 1 && !state.pendingRoundResolution && !(round === 1 && resolved);
   nextButton.textContent = state.pendingRoundResolution ?
     (round === 3 ? '➡ Ver ganador' : `➡ Iniciar caída ${round + 1}`) :
-    (round === 1 && index >= total - 1 && resolved ? '➡ Volver al primer reto' : '➡ Siguiente pregunta');
+    (round === 1 && index >= total - 1 && resolved ? '➡ Volver al primer reto' :
+      !resolved ? '➡ Ir a la siguiente pregunta' : '➡ Siguiente pregunta');
 }
 
 window.addEventListener('DOMContentLoaded', () => {
