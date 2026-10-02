@@ -621,6 +621,39 @@ class TriviaApp {
     return true;
   }
 
+  reopenCurrentQuestion() {
+    const round = this.state.round_activo || 1;
+    const questionIndex = this.state.questionIndex || 0;
+    const questionKey = `${round}:${questionIndex}`;
+    if (this.state.juego_terminado || this.state.resolvedQuestionKey !== questionKey) return false;
+    const attempts = this.state.intentos || [];
+    const attempt = attempts[attempts.length - 1];
+    if (!attempt || attempt.ronda !== round || attempt.pregunta !== questionIndex + 1) return false;
+
+    this.state.intentos = attempts.slice(0, -1);
+    const row = this.state.respuestas?.[attempt.equipo]?.[`ronda${round}`];
+    if (row) row[questionIndex] = 'Sin responder';
+    if (round === 1 && attempt.resultado === 'Incorrecta') {
+      this.state.respuestas.equipoA.ronda1[questionIndex] = 'Sin responder';
+      this.state.respuestas.equipoB.ronda1[questionIndex] = 'Sin responder';
+    }
+    this.state.activeTeam = attempt.equipo;
+    this.state.resolvedQuestionKey = null;
+    this.state.pendingRoundResolution = null;
+    this.state.isAnswerRevealed = false;
+    syncAciertosState(this.state);
+    this.saveAndSyncState({ type: 'REOPEN_QUESTION', action: 'ACTUALIZAR_MARCADOR', round, questionIndex });
+
+    // La hoja conserva el intento original; esta fila deja constancia de su anulación.
+    this.sendAttemptWebhook({
+      id: `${attempt.id}-correccion`, idPartida: this.state.idPartida,
+      fechaHora: new Date().toISOString(), ronda: round, pregunta: questionIndex + 1,
+      intento: attempt.intento, equipo: attempt.equipo, equipoNombre: attempt.equipoNombre,
+      resultado: 'Corrección', opcion: `Anula ${attempt.id}`, turnoSiguiente: attempt.equipoNombre
+    });
+    return true;
+  }
+
   sendAttemptWebhook(attempt) {
     fetch(SHEET_WEBHOOK_URL, {
       method: 'POST',

@@ -25,7 +25,9 @@ function arenaSubmitAttempt(correct, selectedOption = null) {
   setTimeout(() => { arenaSubmissionLocked = false; }, 500);
 }
 
-function arenaBack() { prevQuestion(); }
+function arenaBack() {
+  if (!triviaApp.reopenCurrentQuestion()) prevQuestion();
+}
 function arenaNext() { nextQuestion(); }
 
 function arenaRenderDots(teamId, score, goal) {
@@ -147,8 +149,8 @@ function arenaRender() {
       });
     }
   const backButton = document.getElementById('arenaBack');
-  backButton.disabled = index === 0 || !!state.pendingRoundResolution;
-  backButton.textContent = correctAnswer ? '↩ Volver a la pregunta anterior' : '↩ Volver a la pregunta';
+  backButton.disabled = !resolved && index === 0;
+  backButton.textContent = resolved ? '↩ Volver a la pregunta' : '↩ Pregunta anterior';
   const nextButton = document.getElementById('arenaNext');
   nextButton.disabled = index >= total - 1 && !state.pendingRoundResolution && !(round === 1 && resolved);
   nextButton.textContent = state.pendingRoundResolution ?
