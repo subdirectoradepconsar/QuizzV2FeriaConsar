@@ -7,7 +7,7 @@
 const ROUND_GOALS = {
   1: 1, // Round 1 (Opción Múltiple): 1 acierto para ganar round y avanzar a Round 2
   2: 5, // Round 2 (Verdadero / Falso): 5 aciertos para ganar round y avanzar a Round 3
-  3: 4  // Round 3 (Preguntas Abiertas): 4 aciertos para ganar el Gran Combate
+  3: 1  // Round 3 (Preguntas Abiertas): 1 acierto para ganar el Gran Combate
 };
 
 const DEFAULT_RESPUESTAS = () => ({
@@ -97,6 +97,7 @@ const DEFAULT_STATE = {
   intentos: [],
   juego_terminado: false,
   equipoGanador: null,
+  empate: false,
   marcador_global: { equipoA: 0, equipoB: 0 }, // Rounds ganados
   aciertos_por_ronda: DEFAULT_ACIERTOS_POR_RONDA(), // Aciertos individuales aislados por ronda
   aciertos_round: { equipoA: 0, equipoB: 0 },  // Aciertos del round activo
@@ -307,6 +308,7 @@ class TriviaApp {
       intentos: this.state.intentos || [],
       juego_terminado: this.state.juego_terminado || false,
       equipoGanador: this.state.equipoGanador || null,
+      empate: this.state.empate || false,
       accion: actionStr,
       ultimo_evento: normalizedActionEvent || {
         type: actionStr,
@@ -429,6 +431,7 @@ class TriviaApp {
     if (newState.juego_terminado !== undefined) {
       this.state.juego_terminado = newState.juego_terminado;
     }
+    if (newState.empate !== undefined) this.state.empate = newState.empate;
     if (newState.equipoGanador !== undefined) {
       this.state.equipoGanador = newState.equipoGanador;
     }
@@ -548,7 +551,7 @@ class TriviaApp {
 
   selectTeamTurn(team) {
     const key = team === 'tecnica' || team === 'equipoA' ? 'equipoA' : team === 'ruda' || team === 'equipoB' ? 'equipoB' : null;
-    if (!key || this.state.juego_terminado || this.state.screenPhase !== 'questions') return false;
+    if (!key || this.state.juego_terminado || this.state.empate || this.state.screenPhase !== 'questions') return false;
     if (this.state.activeTeam) return false;
     const questionKey = `${this.state.round_activo || 1}:${this.state.questionIndex || 0}`;
     if (this.state.resolvedQuestionKey === questionKey) return false;
@@ -560,7 +563,7 @@ class TriviaApp {
 
   recordTurnAttempt(correct, selectedOption = null) {
     const key = this.state.activeTeam;
-    if (!key || this.state.juego_terminado || this.state.screenPhase !== 'questions') return false;
+    if (!key || this.state.juego_terminado || this.state.empate || this.state.screenPhase !== 'questions') return false;
     const round = this.state.round_activo || 1;
     const questionIndex = this.state.questionIndex || 0;
     const questionKey = `${round}:${questionIndex}`;
@@ -777,7 +780,7 @@ class TriviaApp {
     syncAciertosState(this.state);
 
     const totalQuestionsInRound = TRIVIA_QUESTIONS[this.state.versionId]?.questions?.length || (roundNum === 1 ? 8 : (roundNum === 2 ? 10 : 6));
-    const currentGoal = ROUND_GOALS[roundNum] || (roundNum === 1 ? 1 : (roundNum === 2 ? 5 : 4));
+    const currentGoal = ROUND_GOALS[roundNum] || (roundNum === 1 ? 1 : (roundNum === 2 ? 5 : 1));
     const teamScoreInRound = this.state.aciertos_round[key] || 0;
     const isLastQuestion = qIdx >= totalQuestionsInRound - 1;
 
@@ -866,7 +869,12 @@ class TriviaApp {
         this.saveAndSyncState(evt);
         return;
       } else if (roundNum >= 3 || this.state.marcador_global[key] >= 3) {
-        // Gana el tercer bloque con 4 aciertos: victoria definitiva.
+        // Si ambos equipos ganaron una ronda, el desempate se resuelve físicamente.
+        if (this.state.marcador_global.equipoA === this.state.marcador_global.equipoB) {
+          this.declareTie(roundNum);
+          return;
+        }
+        // Gana el tercer bloque con 1 acierto: victoria definitiva.
         this.state.juego_terminado = true;
         this.state.equipoGanador = teamDisplayName;
 
@@ -915,6 +923,14 @@ class TriviaApp {
     return true;
   }
 
+  declareTie(roundNum) {
+    this.state.empate = true;
+    this.state.equipoGanador = null;
+    this.state.pendingRoundResolution = null;
+    this.state.activeTeam = null;
+    this.saveAndSyncState({ type: 'EMPATE', action: 'EMPATE', round: roundNum });
+  }
+
   evaluateEndOfRound(roundNum, lastScoringKey = null) {
     const scoreA = this.state.aciertos_round?.equipoA || 0;
     const scoreB = this.state.aciertos_round?.equipoB || 0;
@@ -928,8 +944,8 @@ class TriviaApp {
       roundWinnerKey = 'equipoB';
       roundWinnerName = 'Las Indestructibles Leyendas del Ahorro';
     } else {
-      roundWinnerKey = lastScoringKey || 'equipoA';
-      roundWinnerName = roundWinnerKey === 'equipoA' ? 'Los Hermanos Dinamita del Retiro' : 'Las Indestructibles Leyendas del Ahorro';
+      this.declareTie(roundNum);
+      return;
     }
 
     // Incrementa el marcador global de Rounds ganados (1 - 0 -> 2 - 0 -> 3 - 0)
@@ -970,6 +986,10 @@ class TriviaApp {
       syncAciertosState(this.state);
       this.saveAndSyncState(evt);
     } else if (roundNum >= 3 || this.state.marcador_global[roundWinnerKey] >= 3) {
+      if (this.state.marcador_global.equipoA === this.state.marcador_global.equipoB) {
+        this.declareTie(roundNum);
+        return;
+      }
       // Fin de Round 3 -> Marcador llega a 3 - 0 -> VICTORIA GLOBAL (Ganador de la Partida)
       this.state.juego_terminado = true;
       this.state.equipoGanador = roundWinnerName;
@@ -1126,6 +1146,7 @@ class TriviaApp {
     
     const nextMatchId = getNextMatchId(this.state.idPartida);
     this.state.idPartida = nextMatchId;
+    this.state.empate = false;
     this.state.webhookSentForId = null;
     this.state.round_activo = 1;
     this.state.versionId = "version1";

@@ -310,7 +310,7 @@
   <script src="questions.js"></script>
   <script src="app.js?v=reabrir-pregunta-20261002"></script>
   <script>
-    const GOALS = { 1: 1, 2: 5, 3: 4 };
+    const GOALS = { 1: 1, 2: 5, 3: 1 };
     let currentState = null;
     let victoryModalDismissed = false;
 
@@ -333,7 +333,7 @@
       const currentQuestion = questionsList[qIdx] || { question: "Cargando pregunta...", options: [], correct: 0, explanation: "" };
 
       const roundActivo = currentState.round_activo || 1;
-      const currentGoal = GOALS[roundActivo] || (roundActivo === 1 ? 1 : (roundActivo === 2 ? 5 : 4));
+      const currentGoal = GOALS[roundActivo] || (roundActivo === 1 ? 1 : (roundActivo === 2 ? 5 : 1));
 
       const equipoA_Aciertos = currentState.aciertos_round ? (currentState.aciertos_round.equipoA || 0) : (currentState.scores?.tecnica || 0);
       const equipoB_Aciertos = currentState.aciertos_round ? (currentState.aciertos_round.equipoB || 0) : (currentState.scores?.ruda || 0);
@@ -385,7 +385,7 @@
       const ROUND_INFO = {
         1: { name: "Round 1", subtitle: "Meta: 1 acierto" },
         2: { name: "Round 2", subtitle: "Meta: 5 aciertos" },
-        3: { name: "Round 3", subtitle: "Meta: 4 aciertos" }
+        3: { name: "Round 3", subtitle: "Meta: 1 acierto" }
       };
 
       Object.keys(TRIVIA_QUESTIONS).forEach((vKey, index) => {
@@ -542,7 +542,7 @@
       document.getElementById('scoreRudaText').innerText = `Aciertos: ${equipoB_Aciertos} / ${currentGoal}`;
       document.getElementById('modRoundGoalTag').innerText = `Round ${roundActivo} • Meta: ${currentGoal} aciertos`;
 
-      // Mini-Marcador de Aciertos (1 en R1, 5 en R2, 4 en R3)
+      // Mini-Marcador de Aciertos (1 en R1, 5 en R2, 1 en R3)
       renderProgressDots('modDotsTecnica', equipoA_Aciertos, currentGoal, 'tecnica');
       renderProgressDots('modDotsRuda', equipoB_Aciertos, currentGoal, 'ruda');
     }

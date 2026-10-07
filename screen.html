@@ -178,6 +178,13 @@
     </div>
   </div>
 
+  <div id="empateOverlay" role="dialog" aria-modal="true" aria-labelledby="empateTitle" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center z-[100] p-4">
+    <div class="bg-slate-900 rounded-3xl p-10 max-w-3xl w-full text-center border-4 border-amber-400 shadow-2xl">
+      <h3 id="empateTitle" class="text-6xl font-lucha text-amber-400 mb-6">Empate</h3>
+      <p class="text-3xl font-bold text-white">Vamos a la pregunta de desempate</p>
+    </div>
+  </div>
+
   <!-- OVERLAY: Victoria Global Animation (Fin de la Pelea) -->
   <div id="victoriaGlobalOverlay" class="victoria-overlay hidden">
     <div class="victoria-card animate-score-burst">
@@ -211,7 +218,7 @@
   <script src="questions.js"></script>
   <script src="app.js?v=reabrir-pregunta-20261002"></script>
   <script>
-    const GOALS = { 1: 1, 2: 5, 3: 4 };
+    const GOALS = { 1: 1, 2: 5, 3: 1 };
     let lastState = null;
     let prevAciertos = { equipoA: 0, equipoB: 0 };
     let prevRounds = { equipoA: 0, equipoB: 0 };
@@ -290,12 +297,12 @@
       const currentQuestion = questionsList[qIdx] || { question: "Cargando pregunta...", options: [], correct: 0, explanation: "" };
 
       const roundActivo = state.round_activo || 1;
-      const currentGoal = GOALS[roundActivo] || (roundActivo === 1 ? 1 : (roundActivo === 2 ? 5 : 4));
+      const currentGoal = GOALS[roundActivo] || (roundActivo === 1 ? 1 : (roundActivo === 2 ? 5 : 1));
 
       const roundTitles = {
         1: "ROUND 1 • Llave inicial: opción múltiple",
         2: "ROUND 2 • Duelo verdadero o falso · 5 aciertos",
-        3: "ROUND 3 • Combate de respuesta abierta · 4 aciertos"
+        3: "ROUND 3 • Combate de respuesta abierta · 1 acierto"
       };
 
       const equipoA_Aciertos = state.aciertos_round ? (state.aciertos_round.equipoA || 0) : (state.scores?.tecnica || 0);
@@ -310,9 +317,13 @@
       document.getElementById('caidasRuda').innerText = `${equipoB_Rounds} Rounds`;
       document.getElementById('roundGoalBadge').innerText = roundTitles[roundActivo] || `ROUND ${roundActivo}`;
 
-      // Render Mini-Marcador de Aciertos del Round Activo (1 en R1, 5 en R2, 4 en R3)
+      // Render Mini-Marcador de Aciertos del Round Activo (1 en R1, 5 en R2, 1 en R3)
       renderProgressDots('dotsTecnica', equipoA_Aciertos, currentGoal, 'tecnica');
       renderProgressDots('dotsRuda', equipoB_Aciertos, currentGoal, 'ruda');
+
+      const empateOverlay = document.getElementById('empateOverlay');
+      empateOverlay.classList.toggle('hidden', !state.empate);
+      empateOverlay.classList.toggle('flex', !!state.empate);
 
       // Acciones y Animaciones
       if (actionEvent) {
@@ -378,7 +389,7 @@
         }
       }
 
-      if (state.juego_terminado && (!actionEvent || actionEvent.type !== "ROUND_GANADO")) {
+      if (!state.empate && state.juego_terminado && (!actionEvent || actionEvent.type !== "ROUND_GANADO")) {
         const winner = state.equipoGanador || (equipoB_Rounds > equipoA_Rounds ? 'Las Indestructibles Leyendas del Ahorro' : 'Los Hermanos Dinamita del Retiro');
         triggerVictoriaGlobalOverlay(winner);
       } else {

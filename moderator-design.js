@@ -51,7 +51,7 @@ function arenaRender() {
   const question = version.questions[index];
   const blue = state.aciertos_round?.equipoA || 0;
   const pink = state.aciertos_round?.equipoB || 0;
-  const goal = { 1: 1, 2: 5, 3: 4 }[round] || 1;
+  const goal = { 1: 1, 2: 5, 3: 1 }[round] || 1;
   const answersLocked = arenaStage !== 'questions' || state.juego_terminado;
   const resolved = state.resolvedQuestionKey === `${round}:${index}`;
   const canAnswer = !answersLocked && !resolved && !!state.activeTeam;
