@@ -1158,7 +1158,7 @@ class TriviaApp {
 
   initBoxingBellAudio() {
     try {
-      this.bellAudio = new Audio("Sonidocampanadebox.mp3");
+      this.bellAudio = document.getElementById("boxingBellAudio") || new Audio("Sonidocampanadebox.mp3");
       this.bellAudio.preload = "auto";
     } catch (e) {
       console.warn("Could not load Sonidocampanadebox.mp3:", e);
@@ -1194,8 +1194,11 @@ class TriviaApp {
         this.bellAudio.currentTime = 0;
         const promise = this.bellAudio.play();
         if (promise !== undefined) {
-          promise.catch((err) => {
+          return promise.catch((err) => {
+            this._lastBellTime = 0;
+            window.dispatchEvent(new Event("screen-audio-blocked"));
             console.warn("Audio play error:", err);
+            return false;
           });
         }
         return;

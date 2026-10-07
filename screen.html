@@ -40,6 +40,8 @@
     </div>
   </div>
 
+  <button id="enableScreenAudio" type="button" style="position:fixed;top:12px;right:12px;z-index:1000;padding:12px 18px;border:2px solid #C5A059;border-radius:12px;background:#691C32;color:white;font-weight:bold;cursor:pointer">🔔 Activar y probar sonido</button>
+
   <!-- Audio Element Preload for Boxing Bell -->
   <audio id="boxingBellAudio" src="Sonidocampanadebox.mp3" preload="auto"></audio>
   <audio id="correctAnswerAudio" src="Aplausos-corto.mp3" preload="auto"></audio>
@@ -245,10 +247,35 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      // Audio Context Unlock on User Interaction
-      document.body.addEventListener('click', () => {
-        if (window.triviaApp) triviaApp.initAudio();
-      }, { once: true });
+      const audioButton = document.getElementById('enableScreenAudio');
+      window.addEventListener('screen-audio-blocked', () => {
+        audioButton.hidden = false;
+        audioButton.textContent = '🔔 Activar y probar sonido';
+      });
+      audioButton.addEventListener('click', async () => {
+        try {
+          triviaApp.initAudio();
+          // Iniciar cada MP3 durante el clic para habilitar los efectos remotos.
+          const effects = ['correctAnswerAudio', 'wrongAnswerAudio'].map(id => {
+            const audio = document.getElementById(id);
+            audio.muted = true;
+            return audio.play().finally(() => {
+              audio.pause();
+              audio.currentTime = 0;
+              audio.muted = false;
+            });
+          });
+          triviaApp._lastBellTime = 0;
+          const bell = triviaApp.playBellSound();
+          const results = await Promise.all([bell, ...effects]);
+          if (results[0] === false) throw new Error('Campana bloqueada');
+          audioButton.hidden = true;
+        } catch (error) {
+          audioButton.hidden = false;
+          audioButton.textContent = '🔔 Reintentar prueba de sonido';
+          console.warn('No se pudo activar el sonido:', error);
+        }
+      });
 
       triviaApp.subscribe((state, actionEvent) => {
         handleStateUpdate(state, actionEvent);
