@@ -16,10 +16,10 @@ const TRIVIA_QUESTIONS = {
         id: 1,
         question: "¿Qué entidad regula y vigila a las Afores?",
         options: [
-          "a) CONDUSEF",
-          "b) CONSAR",
-          "c) SAT",
-          "d) IMSS"
+          "CONDUSEF",
+          "CONSAR",
+          "SAT",
+          "IMSS"
         ],
         correct: 1,
         explanation: "La CONSAR (Comisión Nacional del Sistema de Ahorro para el Retiro) regula y supervisa que tus recursos estén seguros."
@@ -28,10 +28,10 @@ const TRIVIA_QUESTIONS = {
         id: 2,
         question: "Prestación que ofrece el patrón para fomentar el ahorro entre sus empleados:",
         options: [
-          "a) Caja de ahorro",
-          "b) Renta vitalicia",
-          "c) Coyotaje",
-          "d) Tanda"
+          "Caja de ahorro",
+          "Renta vitalicia",
+          "Coyotaje",
+          "Tanda"
         ],
         correct: 0,
         explanation: "La caja de ahorro es una prestación laboral formal para fomentar el hábito del ahorro de los trabajadores."
@@ -40,10 +40,10 @@ const TRIVIA_QUESTIONS = {
         id: 3,
         question: "¿Cuál de estos es un ejemplo de «gasto hormiga»?",
         options: [
-          "a) Pagar la renta",
-          "b) Un café diario",
-          "c) Ahorrar para el retiro",
-          "d) Pagar el predial"
+          "Pagar la renta",
+          "Un café diario",
+          "Ahorrar para el retiro",
+          "Pagar el predial"
         ],
         correct: 1,
         explanation: "Un café diario, antojitos o compras impulsivas son gastos hormiga que merman tu capacidad de ahorro."
@@ -52,10 +52,10 @@ const TRIVIA_QUESTIONS = {
         id: 4,
         question: "¿Para qué sirve la renta vitalicia?",
         options: [
-          "a) Ahorrar a corto plazo",
-          "b) Garantizar una pensión de por vida",
-          "c) Cambiar de Afore",
-          "d) Evitar comisiones"
+          "Ahorrar a corto plazo",
+          "Garantizar una pensión de por vida",
+          "Cambiar de Afore",
+          "Evitar comisiones"
         ],
         correct: 1,
         explanation: "La renta vitalicia es una modalidad de pensión contratada con una aseguradora para recibir pagos de por vida."
@@ -64,10 +64,10 @@ const TRIVIA_QUESTIONS = {
         id: 5,
         question: "¿Cuántas Afores operan actualmente en México?",
         options: [
-          "a) 5",
-          "b) 10",
-          "c) 15",
-          "d) 20"
+          "5",
+          "10",
+          "15",
+          "20"
         ],
         correct: 1,
         explanation: "Actualmente operan 10 Afores autorizadas y supervisadas por la CONSAR en el sistema financiero."
@@ -76,10 +76,10 @@ const TRIVIA_QUESTIONS = {
         id: 6,
         question: "Una Afore es una institución…",
         options: [
-          "a) Educativa",
-          "b) Financiera",
-          "c) De salud",
-          "d) De gobierno"
+          "Educativa",
+          "Financiera",
+          "De salud",
+          "De gobierno"
         ],
         correct: 1,
         explanation: "Las Afores son instituciones financieras privadas dedicadas exclusivamente a administrar los fondos de retiro."
@@ -88,10 +88,10 @@ const TRIVIA_QUESTIONS = {
         id: 7,
         question: "¿Qué instituto atiende principalmente a los trabajadores del sector privado?",
         options: [
-          "a) ISSSTE",
-          "b) IMSS",
-          "c) INFONAVIT",
-          "d) CONSAR"
+          "ISSSTE",
+          "IMSS",
+          "INFONAVIT",
+          "CONSAR"
         ],
         correct: 1,
         explanation: "El IMSS (Instituto Mexicano del Seguro Social) atiende a los trabajadores afiliados del sector privado."
@@ -100,10 +100,10 @@ const TRIVIA_QUESTIONS = {
         id: 8,
         question: "Concepto que permite comprender mejor los productos financieros:",
         options: [
-          "a) Coyotaje",
-          "b) Educación financiera",
-          "c) Minusvalía",
-          "d) Comisión"
+          "Coyotaje",
+          "Educación financiera",
+          "Minusvalía",
+          "Comisión"
         ],
         correct: 1,
         explanation: "La educación financiera es la herramienta clave para tomar decisiones inteligentes sobre tu presupuesto y retiro."
@@ -119,18 +119,18 @@ const TRIVIA_QUESTIONS = {
         id: 1,
         question: "¿Se pueden hacer aportaciones voluntarias a tu cuenta Afore?",
         options: [
-          "a) Sí (Verdadero)",
-          "b) No (Falso)"
+          "Sí (Verdadero)",
+          "No (Falso)"
         ],
         correct: 0,
         explanation: "¡Sí! Cualquier trabajador puede realizar Ahorro Voluntario a partir de $50 pesos desde su celular o tienda."
       },
       {
         id: 2,
-        question: "¿Los SIEFORE son las cuentas individuales de los trabajadores?",
+        question: "¿Las SIEFORE son las cuentas individuales de los trabajadores?",
         options: [
-          "a) Sí (Verdadero)",
-          "b) No (Falso)"
+          "Sí (Verdadero)",
+          "No (Falso)"
         ],
         correct: 1,
         explanation: "¡No! Las SIEFORES son los fondos de inversión donde se invierten los recursos para generar rendimientos."
@@ -139,8 +139,8 @@ const TRIVIA_QUESTIONS = {
         id: 3,
         question: "¿Un trabajador independiente puede hacer ahorro voluntario?",
         options: [
-          "a) Sí (Verdadero)",
-          "b) No (Falso)"
+          "Sí (Verdadero)",
+          "No (Falso)"
         ],
         correct: 0,
         explanation: "¡Sí! Los trabajadores independientes pueden abrir su Afore y hacer aportaciones cuando lo deseen."
@@ -149,8 +149,8 @@ const TRIVIA_QUESTIONS = {
         id: 4,
         question: "¿Debes dejar de revisar las comisiones una vez que elegiste tu Afore?",
         options: [
-          "a) Sí (Verdadero)",
-          "b) No (Falso)"
+          "Sí (Verdadero)",
+          "No (Falso)"
         ],
         correct: 1,
         explanation: "¡No! Es fundamental comparar comisiones y rendimientos periódicamente con el Semáforo de la CONSAR."
@@ -159,8 +159,8 @@ const TRIVIA_QUESTIONS = {
         id: 5,
         question: "¿Las Afores se encargan de administrar los fondos para el retiro?",
         options: [
-          "a) Sí (Verdadero)",
-          "b) No (Falso)"
+          "Sí (Verdadero)",
+          "No (Falso)"
         ],
         correct: 0,
         explanation: "¡Sí! Su función principal es administrar, resguardar e invertir tu dinero para la pensión futura."
@@ -169,8 +169,8 @@ const TRIVIA_QUESTIONS = {
         id: 6,
         question: "¿Debes cambiarte de Afore solo porque cambiaste de empleo?",
         options: [
-          "a) Sí (Verdadero)",
-          "b) No (Falso)"
+          "Sí (Verdadero)",
+          "No (Falso)"
         ],
         correct: 1,
         explanation: "¡No! Tu cuenta de Afore es única y te pertenece a ti sin importar cuántas veces cambies de trabajo."
@@ -179,8 +179,8 @@ const TRIVIA_QUESTIONS = {
         id: 7,
         question: "¿El ahorro voluntario puede ayudarte a tener una mejor pensión?",
         options: [
-          "a) Sí (Verdadero)",
-          "b) No (Falso)"
+          "Sí (Verdadero)",
+          "No (Falso)"
         ],
         correct: 0,
         explanation: "¡Sí! El Ahorro Voluntario incrementa el saldo final y aprovecha el interés compuesto para subir tu pensión."
@@ -189,8 +189,8 @@ const TRIVIA_QUESTIONS = {
         id: 8,
         question: "¿Guardar tu dinero «bajo el colchón» lo hace crecer?",
         options: [
-          "a) Sí (Verdadero)",
-          "b) No (Falso)"
+          "Sí (Verdadero)",
+          "No (Falso)"
         ],
         correct: 1,
         explanation: "¡No! Guardar dinero en efectivo en casa hace que pierda poder de compra debido a la inflación."
@@ -199,8 +199,8 @@ const TRIVIA_QUESTIONS = {
         id: 9,
         question: "¿La CONSAR es la autoridad que regula el Sistema de Ahorro para el Retiro?",
         options: [
-          "a) Sí (Verdadero)",
-          "b) No (Falso)"
+          "Sí (Verdadero)",
+          "No (Falso)"
         ],
         correct: 0,
         explanation: "¡Sí! La CONSAR regula, supervisa e inspecciona el correcto funcionamiento del SAR en México."
@@ -209,8 +209,8 @@ const TRIVIA_QUESTIONS = {
         id: 10,
         question: "¿El «coyotaje» es un trámite oficial y recomendable?",
         options: [
-          "a) Sí (Verdadero)",
-          "b) No (Falso)"
+          "Sí (Verdadero)",
+          "No (Falso)"
         ],
         correct: 1,
         explanation: "¡No! Es un fraude. Todos los trámites del SAR son totalmente gratuitos y personales."

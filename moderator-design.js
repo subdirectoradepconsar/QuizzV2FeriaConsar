@@ -40,9 +40,17 @@ function arenaRenderDots(teamId, score, goal) {
   }
 }
 
+function arenaSyncTieDialog(state) {
+  const tieDialog = document.getElementById('arenaTieDialog');
+  if (state.empate && !state.juego_terminado) {
+    if (!tieDialog.open) tieDialog.showModal();
+  } else if (tieDialog.open) tieDialog.close();
+}
+
 function arenaRender() {
   const state = currentState;
   if (!state) return;
+  arenaSyncTieDialog(state);
   arenaStage = state.screenPhase || 'questions';
   const round = state.round_activo || 1;
   const version = TRIVIA_QUESTIONS[state.versionId] || TRIVIA_QUESTIONS.version1;
@@ -52,7 +60,7 @@ function arenaRender() {
   const blue = state.aciertos_round?.equipoA || 0;
   const pink = state.aciertos_round?.equipoB || 0;
   const goal = { 1: 1, 2: 5, 3: 1 }[round] || 1;
-  const answersLocked = arenaStage !== 'questions' || state.juego_terminado;
+  const answersLocked = arenaStage !== 'questions' || state.juego_terminado || state.empate;
   const resolved = state.resolvedQuestionKey === `${round}:${index}`;
   const canAnswer = !answersLocked && !resolved && !!state.activeTeam;
   document.getElementById('arenaRound').textContent = `Caída ${round}`;
@@ -160,5 +168,6 @@ function arenaRender() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('arenaTieDialog').addEventListener('cancel', event => event.preventDefault());
   triviaApp.subscribe(() => arenaRender());
 });

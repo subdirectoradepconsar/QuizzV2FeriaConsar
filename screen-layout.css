@@ -10,6 +10,8 @@
 .victoria-winner-name{margin:0;color:#ffe88b;font-size:clamp(15px,2.3vmin,23px);font-weight:900;line-height:1.2;text-wrap:balance}
 .victoria-footer{margin:0;color:#e2e8f0;font-size:clamp(14px,2vmin,20px);font-weight:800;line-height:1.25}
 @media(max-height:600px){.victoria-card{gap:5px;padding:12px}.victoria-trophy{font-size:34px}.victoria-title{font-size:clamp(28px,5vmin,42px)}.victoria-logo{max-height:36vh}}
+.global-scoreboard { flex-direction: column; gap: 4px; max-width: 100%; }
+#scoreGlobalText { white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; }
 @media (min-width: 1100px) {
   #screenBody > header {
     max-width: 1400px;

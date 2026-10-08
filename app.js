@@ -931,6 +931,25 @@ class TriviaApp {
     this.saveAndSyncState({ type: 'EMPATE', action: 'EMPATE', round: roundNum });
   }
 
+  resolveTieWinner(team) {
+    if (!this.state.empate || this.state.juego_terminado || !['equipoA', 'equipoB'].includes(team)) return false;
+    const name = team === 'equipoA' ? 'Los Hermanos Dinamita del Retiro' : 'Las Indestructibles Leyendas del Ahorro';
+    this.state.empate = false;
+    this.state.juego_terminado = true;
+    this.state.equipoGanador = name;
+    this.state.pendingRoundResolution = null;
+    this.state.activeTeam = null;
+    this.playMultipleBellStrikes();
+    this.triggerConfetti();
+    this.saveAndSyncState({
+      type: 'VICTORIA_GLOBAL', action: 'VICTORIA_GLOBAL', team,
+      equipoGanador: name, teamName: name, round: this.state.round_activo,
+      desempateManual: true
+    });
+    this.sendWebhookPost();
+    return true;
+  }
+
   evaluateEndOfRound(roundNum, lastScoringKey = null) {
     const scoreA = this.state.aciertos_round?.equipoA || 0;
     const scoreB = this.state.aciertos_round?.equipoB || 0;

@@ -10,7 +10,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="moderator-design.css">
+  <link rel="stylesheet" href="moderator-design.css?v=final-empate-20261007">
   <script>
     tailwind.config = {
       theme: {
@@ -47,6 +47,12 @@
   </div>
 
   <!-- Audio Element Preload for Boxing Bell -->
+  <dialog id="arenaTieDialog" aria-labelledby="arenaTieTitle">
+    <h2 id="arenaTieTitle">Empate · Elegir ganador</h2>
+    <p>¿A qué equipo le quieres dar la victoria?</p>
+    <button type="button" class="arena-team arena-blue" onclick="triviaApp.resolveTieWinner('equipoA')">🏆 Los Hermanos Dinamita del Retiro</button>
+    <button type="button" class="arena-team arena-pink" onclick="triviaApp.resolveTieWinner('equipoB')">🏆 Las Indestructibles Leyendas del Ahorro</button>
+  </dialog>
   <audio id="boxingBellAudio" src="Sonidocampanadebox.mp3" preload="auto"></audio>
 
   <!-- Header Section -->
@@ -307,8 +313,8 @@
   </div>
 
   <!-- Scripts -->
-  <script src="questions.js"></script>
-  <script src="app.js?v=reabrir-pregunta-20261002"></script>
+  <script src="questions.js?v=final-empate-20261007"></script>
+  <script src="app.js?v=final-empate-20261007"></script>
   <script>
     const GOALS = { 1: 1, 2: 5, 3: 1 };
     let currentState = null;
@@ -320,6 +326,7 @@
 
       triviaApp.subscribe((state) => {
         currentState = state;
+        arenaSyncTieDialog(state);
         renderModeratorUI();
       });
     });
@@ -492,6 +499,7 @@
           }`;
           optDiv.innerHTML = `
             <div class="flex items-center gap-3">
+              <span class="text-base font-bold text-amber-400">${String.fromCharCode(65 + idx)}</span>
               <span class="text-base font-bold text-white">${optText}</span>
             </div>
             ${isCorrect ? '<span class="px-2.5 py-1 bg-emerald-500 text-slate-950 text-xs font-black rounded-lg uppercase shadow-sm">Respuesta Correcta ✓</span>' : '<span class="text-xs text-rose-400/70 font-semibold px-2 py-0.5 rounded bg-rose-950/40 border border-rose-800/40">Incorrecto ✕</span>'}
@@ -659,6 +667,6 @@
       }
     }
   </script>
-  <script src="moderator-design.js?v=reabrir-pregunta-20261002"></script>
+  <script src="moderator-design.js?v=final-empate-20261007"></script>
 </body>
 </html>

@@ -10,7 +10,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="screen-layout.css">
+  <link rel="stylesheet" href="screen-layout.css?v=final-empate-20261007">
   <script>
     tailwind.config = {
       theme: {
@@ -71,7 +71,7 @@
       </div>
       
       <!-- Marcador Global Principal (Rounds Ganados) -->
-      <div class="bg-slate-950/90 border-2 border-amber-500/60 px-6 py-2 rounded-2xl shadow-xl shadow-amber-500/10 flex items-center gap-4">
+      <div class="global-scoreboard bg-slate-950/90 border-2 border-amber-500/60 px-6 py-2 rounded-2xl shadow-xl shadow-amber-500/10 flex items-center gap-4">
         <span class="text-xs font-black uppercase text-amber-400 tracking-widest hidden sm:inline">ROUNDS:</span>
         <span class="text-4xl md:text-5xl font-extrabold text-amber-300 font-mono tracking-wider" id="scoreGlobalText">0 - 0</span>
       </div>
@@ -180,7 +180,7 @@
   <div id="empateOverlay" role="dialog" aria-modal="true" aria-labelledby="empateTitle" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center z-[100] p-4">
     <div class="bg-slate-900 rounded-3xl p-10 max-w-3xl w-full text-center border-4 border-amber-400 shadow-2xl">
       <h3 id="empateTitle" class="text-6xl font-lucha text-amber-400 mb-6">Empate</h3>
-      <p class="text-3xl font-bold text-white">Vamos a la pregunta de desempate</p>
+      <p class="text-3xl font-bold text-white">El moderador elegirá al equipo ganador</p>
     </div>
   </div>
 
@@ -214,8 +214,8 @@
   </div>
 
   <!-- Scripts -->
-  <script src="questions.js"></script>
-  <script src="app.js?v=reabrir-pregunta-20261002"></script>
+  <script src="questions.js?v=final-empate-20261007"></script>
+  <script src="app.js?v=final-empate-20261007"></script>
   <script>
     const GOALS = { 1: 1, 2: 5, 3: 1 };
     let lastState = null;
