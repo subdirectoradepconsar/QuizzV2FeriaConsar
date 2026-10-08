@@ -215,7 +215,7 @@
 
   <!-- Scripts -->
   <script src="questions.js?v=final-empate-20261007"></script>
-  <script src="app.js?v=final-empate-20261007"></script>
+  <script src="app.js?v=avance-20261008"></script>
   <script>
     const GOALS = { 1: 1, 2: 5, 3: 1 };
     let lastState = null;
@@ -274,6 +274,17 @@
     });
 
     function handleStateUpdate(state, actionEvent) {
+      // Mostrar la pregunta nueva sin esperar avisos del reto anterior.
+      if (lastState && (lastState.questionIndex !== state.questionIndex ||
+          lastState.round_activo !== state.round_activo ||
+          lastState.screenPhase !== state.screenPhase || lastState.idPartida !== state.idPartida)) {
+        clearTimeout(turnOverlayTimer);
+        ['turnOverlay', 'pointOverlay', 'incorrectOverlay', 'roundGanadoOverlay'].forEach(id => {
+          const overlay = document.getElementById(id);
+          overlay.classList.add('hidden');
+          overlay.classList.remove('flex');
+        });
+      }
       renderPresentationScreen(state.screenPhase || 'questions', actionEvent?.type === 'RESET_ALL');
       const currentVersion = TRIVIA_QUESTIONS[state.versionId] || TRIVIA_QUESTIONS.version1;
       const questionsList = currentVersion.questions || [];
@@ -348,9 +359,6 @@
             playAnswerAudio('correctAnswerAudio');
           } else if (type === "TURN_CHANGED") {
             showTurnOverlay(actionEvent.teamName || resolvedTeamName);
-          } else if (type === "CHANGE_QUESTION" && state.activeTeam) {
-            showTurnOverlay(state.activeTeam === 'equipoA'
-              ? 'Los Hermanos Dinamita del Retiro' : 'Las Indestructibles Leyendas del Ahorro');
           } else if (type === "ATTEMPT_WRONG") {
             triggerIncorrectOverlay();
             playWrongAnswerAudio();

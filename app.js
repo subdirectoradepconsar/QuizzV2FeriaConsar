@@ -136,6 +136,7 @@ class TriviaApp {
 
     this.state = this.loadState();
     this.listeners = [];
+    this.processedSyncEvents = new Set();
 
     // Desactivar reproducción de sonido local si estamos en la interfaz del moderador
     // para evitar que la campana y efectos se dupliquen/repliquen con la pantalla de proyección.
@@ -325,6 +326,9 @@ class TriviaApp {
       actionEvent: normalizedActionEvent
     };
 
+    // Firebase puede emitir el eco local de inmediato; registrar antes de escribir.
+    this.rememberSyncEvent(estadoTriviaData.ultimo_evento.eventId);
+
     // Save to LocalStorage
     try {
       localStorage.setItem(this.storageKey, JSON.stringify(syncData));
@@ -341,19 +345,37 @@ class TriviaApp {
       }
     }
 
+    // Mostrar el cambio antes de enviar a la red.
+    this.notifyListeners(syncData.actionEvent);
+
     // Sync via Firebase Realtime Database
     if (this.dbRef) {
       try {
-        this.dbRef.set(estadoTriviaData);
+        const write = this.dbRef.set(estadoTriviaData);
+        if (write && typeof write.catch === 'function') {
+          write.catch(e => console.error("Firebase Realtime Database write error:", e));
+        }
       } catch (e) {
         console.error("Firebase Realtime Database write error:", e);
       }
     }
 
-    this.notifyListeners(syncData.actionEvent);
+  }
+
+  rememberSyncEvent(eventId) {
+    if (!eventId) return;
+    this.processedSyncEvents.add(eventId);
+    // Acotar memoria durante una jornada larga de partidas.
+    if (this.processedSyncEvents.size > 256) {
+      this.processedSyncEvents.delete(this.processedSyncEvents.values().next().value);
+    }
   }
 
   updateStateLocal(newState, doSync = true, actionEvent = null) {
+    if (!doSync && actionEvent?.eventId) {
+      if (this.processedSyncEvents.has(actionEvent.eventId)) return;
+      this.rememberSyncEvent(actionEvent.eventId);
+    }
     const prevRound = this.state.round_activo;
 
     if (newState.marcador_global) {
