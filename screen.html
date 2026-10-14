@@ -30,7 +30,7 @@
   <!-- Audio Element Preload for Boxing Bell -->
   <audio id="boxingBellAudio" src="Sonidocampanadebox.mp3" preload="auto"></audio>
   <section id="visualWaiting" class="visual-fullscreen hidden" aria-label="Video de espera">
-    <video id="visualWaitingVideo" src="assets/logo_animado_chispas_llamas_4k_v2.mp4" muted loop playsinline preload="auto"></video>
+    <video id="visualWaitingVideo" src="assets/logo_animado_chispas_llamas_4k_v2.mp4" poster="assets/presentacion-dinamita-vs-leyendas.png" muted loop playsinline preload="metadata" disableRemotePlayback></video>
   </section>
   <section id="visualPresentation" class="visual-fullscreen visual-presentation hidden" aria-label="Presentación de equipos">
     <img src="assets/presentacion-dinamita-vs-leyendas.png" alt="Los Hermanos Dinamita del Retiro contra Las Indestructibles Leyendas del Ahorro">
@@ -218,18 +218,83 @@
         ? 'Las Indestructibles Leyendas del Ahorro'
         : 'Los Hermanos Dinamita del Retiro';
     };
+    let currentVisualMode = null;
+    let videoPlayPromise = null;
+
+    function safePlayVideo(video) {
+      if (!video) return;
+      if (videoPlayPromise) {
+        videoPlayPromise
+          .then(() => {
+            if (currentVisualMode === 'espera' && video.paused) {
+              videoPlayPromise = video.play().catch(() => {});
+            }
+          })
+          .catch(() => {});
+        return;
+      }
+
+      if (video.paused) {
+        try {
+          const promise = video.play();
+          if (promise !== undefined) {
+            videoPlayPromise = promise;
+            promise
+              .then(() => {
+                videoPlayPromise = null;
+                if (currentVisualMode !== 'espera') {
+                  safePauseVideo(video);
+                }
+              })
+              .catch(() => {
+                videoPlayPromise = null;
+              });
+          }
+        } catch (e) {
+          videoPlayPromise = null;
+        }
+      }
+    }
+
+    function safePauseVideo(video) {
+      if (!video) return;
+      if (videoPlayPromise) {
+        videoPlayPromise
+          .then(() => {
+            if (!video.paused) video.pause();
+            videoPlayPromise = null;
+          })
+          .catch(() => {
+            videoPlayPromise = null;
+          });
+      } else if (!video.paused) {
+        try {
+          video.pause();
+        } catch (e) {}
+      }
+    }
+
     function renderVisualMode(state) {
       const mode = state.visualMode || 'juego';
+      if (mode === currentVisualMode) return;
+      currentVisualMode = mode;
+
       const waiting = document.getElementById('visualWaiting');
       const presentation = document.getElementById('visualPresentation');
       const video = document.getElementById('visualWaitingVideo');
-      waiting.classList.toggle('hidden', mode !== 'espera');
-      presentation.classList.toggle('hidden', mode !== 'presentacion');
+
       if (mode === 'espera') {
-        if (video.paused) video.play().catch(() => {});
-      } else if (!video.paused) {
-        video.pause();
-        video.currentTime = 0;
+        if (presentation) presentation.classList.add('hidden');
+        if (waiting) waiting.classList.remove('hidden');
+        safePlayVideo(video);
+      } else if (mode === 'presentacion') {
+        safePauseVideo(video);
+        if (waiting) waiting.classList.add('hidden');
+        if (presentation) presentation.classList.remove('hidden');
+      } else {
+        safePauseVideo(video);
+        if (waiting) waiting.classList.add('hidden');
+        if (presentation) presentation.classList.add('hidden');
       }
     }
     let lastState = null;
@@ -241,6 +306,20 @@
       document.body.addEventListener('click', () => {
         if (window.triviaApp) triviaApp.initAudio();
       }, { once: true });
+
+      // Video error safeguard to prevent blank / broken screen
+      const videoWaitingEl = document.getElementById('visualWaitingVideo');
+      if (videoWaitingEl) {
+        videoWaitingEl.addEventListener('error', (e) => {
+          console.warn('Advertencia en reproducción de video, activando respaldo visual:', e);
+          const waiting = document.getElementById('visualWaiting');
+          const presentation = document.getElementById('visualPresentation');
+          if (waiting) waiting.classList.add('hidden');
+          if (presentation && currentVisualMode === 'espera') {
+            presentation.classList.remove('hidden');
+          }
+        });
+      }
 
       triviaApp.subscribe((state, actionEvent) => {
         handleStateUpdate(state, actionEvent);

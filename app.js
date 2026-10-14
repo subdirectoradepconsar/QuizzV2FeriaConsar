@@ -439,6 +439,7 @@ class TriviaApp {
 
   setVisualMode(mode) {
     if (!["espera", "presentacion", "juego"].includes(mode)) return false;
+    if (this.state.visualMode === mode) return true;
     this.state.visualMode = mode;
     this.saveAndSyncState({ type: "VISUAL_MODE", mode });
     return true;
